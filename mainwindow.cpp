@@ -23,8 +23,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->tabWidget->setCurrentIndex(0);
     // Recommend maf and  ms
     ui->mafDoubleSpinBox->setValue(0.05);
-    ui->mindDoubleSpinBox->setValue(0.2);
-    ui->genoDoubleSpinBox->setValue(0);
+    ui->mindDoubleSpinBox->setValue(0.20);
+    ui->genoDoubleSpinBox->setValue(0.05);
 
     // Initiate variables.
     fileReader = new FileReader;
@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent)
     gemmaParamWidget = new GemmaParamWidget;
     emmaxParamWidget = new EmmaxParamWidget;
     qualityControl = new QualityCtrlWidget;
-//    process = new QProcess;
+    //    process = new QProcess;
     graphViewer = new GraphViewer;
     ldByFamGroupButton = new QButtonGroup;
 
@@ -93,12 +93,12 @@ MainWindow::~MainWindow()
     delete qualityControl;
     delete ldByFamGroupButton;
 
-//    if (process)    // QProcess
-//    {
-//        process->terminate();
-//        process->waitForFinished(-1);
-//    }
-//    delete process;
+    //    if (process)    // QProcess
+    //    {
+    //        process->terminate();
+    //        process->waitForFinished(-1);
+    //    }
+    //    delete process;
 
     delete graphViewer;
 }
@@ -183,7 +183,7 @@ void MainWindow::on_pheFileToolButton_closeFileSig()
     ui->pheFileLabel->setText("empty");
     ui->selectedPhenoListWidget->clear();
     ui->excludedPhenoListWidget->clear();
-    this->fileReader->setPhenotypeFile("");
+    this->fileReader->setPhenotypeFile(nullptr);
 }
 
 void MainWindow::on_genoFileToolButton_clicked()
@@ -194,7 +194,7 @@ void MainWindow::on_genoFileToolButton_clicked()
     QStringList fileNames;
     if (fileDialog->exec())
     {
-      fileNames = fileDialog->selectedFiles();
+        fileNames = fileDialog->selectedFiles();
     }
     delete fileDialog;
     if (fileNames.isEmpty())    // If didn't choose any file.
@@ -215,7 +215,7 @@ void MainWindow::on_genoFileToolButton_closeFileSig()
     ui->genoFileToolButton->setShowMenuFlag(false);
     ui->genoFileToolButton->setIcon(QIcon(":/new/icon/images/plus.png"));    // Set plus Icon.
     ui->genoFileLabel->setText("empty");
-    this->fileReader->setGenotypeFile("");
+    this->fileReader->setGenotypeFile(nullptr);
 }
 
 void MainWindow::on_mapFileToolButton_clicked()
@@ -226,7 +226,7 @@ void MainWindow::on_mapFileToolButton_clicked()
     QStringList fileNames;
     if (fileDialog->exec())
     {
-      fileNames = fileDialog->selectedFiles();
+        fileNames = fileDialog->selectedFiles();
     }
     delete fileDialog;
     if (fileNames.isEmpty())    // If didn't choose any file.
@@ -247,7 +247,7 @@ void MainWindow::on_mapFileToolButton_closeFileSig()
     ui->mapFileToolButton->setShowMenuFlag(false);
     ui->mapFileToolButton->setIcon(QIcon(":/new/icon/images/plus.png"));    // Set plus Icon.
     ui->mapFileLabel->setText("empty");
-    this->fileReader->setMapFile("");
+    this->fileReader->setMapFile(nullptr);
 }
 
 void MainWindow::on_covarFileToolButton_clicked()
@@ -258,7 +258,7 @@ void MainWindow::on_covarFileToolButton_clicked()
     QStringList fileNames;
     if (fileDialog->exec())
     {
-      fileNames = fileDialog->selectedFiles();
+        fileNames = fileDialog->selectedFiles();
     }
     delete fileDialog;
     if (fileNames.isEmpty())    // If didn't choose any file.
@@ -279,7 +279,7 @@ void MainWindow::on_covarFileToolButton_closeFileSig()
     ui->covarFileToolButton->setShowMenuFlag(false);
     ui->covarFileToolButton->setIcon(QIcon(":/new/icon/images/plus.png"));    // Set plus Icon.
     ui->covarFileLabel->setText("empty");
-    this->fileReader->setCovariateFile("");
+    this->fileReader->setCovariateFile(nullptr);
 }
 
 void MainWindow::on_kinFileToolButton_clicked()
@@ -290,7 +290,7 @@ void MainWindow::on_kinFileToolButton_clicked()
     QStringList fileNames;
     if (fileDialog->exec())
     {
-      fileNames = fileDialog->selectedFiles();
+        fileNames = fileDialog->selectedFiles();
     }
     delete fileDialog;
     if (fileNames.isEmpty())    // If didn't choose any file.
@@ -311,7 +311,7 @@ void MainWindow::on_kinFileToolButton_closeFileSig()
     ui->kinFileToolButton->setShowMenuFlag(false);
     ui->kinFileToolButton->setIcon(QIcon(":/new/icon/images/plus.png"));    // Set plus Icon.
     ui->kinFileLabel->setText("empty");
-    this->fileReader->setKinshipFile("");
+    this->fileReader->setKinshipFile(nullptr);
 }
 
 /**
@@ -586,7 +586,7 @@ bool MainWindow::callGemmaGwas(QString phenotype, QString genotype, QString map,
         }
 
         if (!this->checkoutExistence(genotype) ||
-            !this->checkoutExistence(map))
+                !this->checkoutExistence(map))
         {
             emit setMsgBoxSig("Error", "Extaract snp after linkage filter error.");
             return false;
@@ -660,30 +660,37 @@ bool MainWindow::callGemmaGwas(QString phenotype, QString genotype, QString map,
 
     if (kinship.isNull() && this->gemmaParamWidget->isMakeRelatedMatAuto())
     {
-         if (!gemma.makeKinship(binaryFile, genoFileBaseName+"_tmp", moreParam))
-         {
-             emit resetWindowSig();
-             QThread::msleep(10);
-             return false;  // Make kinship failed.
-         }
-         if (!runExTool(this->toolpath+"gemma", gemma.getParamList()))
-         {
-             return false;
-         }
-         //kinship = genoFileAbPath + "/output/" + genoFileBaseName + ".cXX.txt";    // Attention
+        if (!gemma.makeKinship(binaryFile, genoFileBaseName+"_tmp", moreParam))
+        {
+            emit resetWindowSig();
+            QThread::msleep(10);
+            return false;  // Make kinship failed.
+        }
+        if (!runExTool(this->toolpath+"gemma", gemma.getParamList()))
+        {
+            return false;
+        }
+        //kinship = genoFileAbPath + "/output/" + genoFileBaseName + ".cXX.txt";    // Attention
 
-         if (moreParam["kinmatrix"] == "1")
-         {
-             kinship = QDir::currentPath() + "/output/" + genoFileBaseName+"_tmp" + ".cXX.txt";
-         }
-         else
-         {
-             kinship = QDir::currentPath() + "/output/" + genoFileBaseName+"_tmp" + ".sXX.txt";
-         }
+        if (moreParam["kinmatrix"] == "1")
+        {
+            kinship = QDir::currentPath() + "/output/" + genoFileBaseName+"_tmp" + ".cXX.txt";
+        }
+        else
+        {
+            kinship = QDir::currentPath() + "/output/" + genoFileBaseName+"_tmp" + ".sXX.txt";
+        }
+        ui->kinFileToolButton->setShowMenuFlag(true);
+        ui->kinFileToolButton->setIcon(QIcon(":/new/icon/images/file.png"));
+        this->fileReader->setKinshipFile(kinship);
+
+        QFileInfo  kinFileInfo(kinship);
+        QString fileName = kinFileInfo.fileName(); // Get the file name from a path.
+        ui->kinFileLabel->setText(fileName);
     }
 
     if (!gemma.runGWAS(genoFileAbPath+"/"+genoFileBaseName+"_tmp", phenotype, covar, kinship,
-                      name+"_"+pheFileBaseName, model, moreParam))
+                       name+"_"+pheFileBaseName, model, moreParam))
     {
         emit resetWindowSig();
         QThread::msleep(10);
@@ -704,14 +711,6 @@ bool MainWindow::callGemmaGwas(QString phenotype, QString genotype, QString map,
     }
     file.remove(binaryFile+".log");
     file.remove(binaryFile+".nosex");
-    if (moreParam["kinmatrix"] == "1")
-    {
-        file.remove(QDir::currentPath() + "/output/"+genoFileBaseName+"_tmp.cXX.txt");
-    }
-    else
-    {
-        file.remove(QDir::currentPath() + "/output/"+genoFileBaseName+"_tmp.sXX.txt");
-    }
     file.remove(QDir::currentPath() + "/output/"+genoFileBaseName+"_tmp.log.txt");
 
     if (qualityControl->isLinkageFilterNeeded() && genotype != fileReader->getGenotypeFile())
@@ -766,14 +765,14 @@ bool MainWindow::callGemmaGwas(QString phenotype, QString genotype, QString map,
     else if (model == "LMM")
     {
         if (this->runningFlag &&
-            !this->checkoutExistence(objDir.path()+"/"+name+"_"+pheFileBaseName+".assoc.txt"))
+                !this->checkoutExistence(objDir.path()+"/"+name+"_"+pheFileBaseName+".assoc.txt"))
         {
             emit setMsgBoxSig("Error", "Gemma GWAS error.");
             return false;
         }
 
         emit setLineEditTextSig(ui->qqmanGwasResultLineEdit, objDir.path()
-                 +"/"+name+"_"+pheFileBaseName+".assoc.txt");
+                                +"/"+name+"_"+pheFileBaseName+".assoc.txt");
         QThread::msleep(10);
     }
 
@@ -902,36 +901,44 @@ bool MainWindow::callEmmaxGwas(QString phenotype, QString genotype, QString map,
     {
         if (!runExTool(this->toolpath+"plink", plink.getParamList()))
         {
-                return false;
+            return false;
         }
     }
 
     Emmax emmax;
     if (kinship.isNull() && emmaxParamWidget->isMakeKinAuto())
     {
-         if (!emmax.makeKinship(transposeFile, moreParam))
-         {
-             emit resetWindowSig();
-             QThread::msleep(10);
-             return false;  // Make kinship failed.
-         }
-         if (!runExTool(this->toolpath+"emmax-kin", emmax.getParamList()))
-         {
-             return false;
-         }
+        if (!emmax.makeKinship(transposeFile, moreParam))
+        {
+            emit resetWindowSig();
+            QThread::msleep(10);
+            return false;  // Make kinship failed.
+        }
 
-         if (emmaxParamWidget->isBNkinMatrix())
-         {
-             kinship = genoFileAbPath + "/" + genoFileBaseName+"_tmp" + ".hBN.kinf";
-         }
-         else
-         {
+        if (!runExTool(this->toolpath+"emmax-kin", emmax.getParamList()))
+        {
+            return false;
+        }
+
+        if (emmaxParamWidget->isBNkinMatrix())
+        {
+            kinship = genoFileAbPath + "/" + genoFileBaseName+"_tmp" + ".hBN.kinf";
+        }
+        else
+        {
             kinship = genoFileAbPath + "/" + genoFileBaseName+"_tmp" + ".hIBS.kinf";
-         }
+        }
+        ui->kinFileToolButton->setShowMenuFlag(true);
+        ui->kinFileToolButton->setIcon(QIcon(":/new/icon/images/file.png"));
+        this->fileReader->setKinshipFile(kinship);
+
+        QFileInfo  kinFileInfo(kinship);
+        QString fileName = kinFileInfo.fileName(); // Get the file name from a path.
+        ui->kinFileLabel->setText(fileName);
     }
 
     if (!emmax.runGWAS(transposeFile, phenotype, covar, kinship,
-                      out+"/"+name+"_"+pheFileBaseName, moreParam))
+                       out+"/"+name+"_"+pheFileBaseName, moreParam))
     {
         emit resetWindowSig();
         QThread::msleep(10);
@@ -950,8 +957,6 @@ bool MainWindow::callEmmaxGwas(QString phenotype, QString genotype, QString map,
         QString pValFile = out+"/"+name+"_"+pheFileBaseName+".ps";
         QString correctedFile = out+"/"+name+"_"+pheFileBaseName+"_corr.ps";
 
-        qDebug() << "pValFile: " << pValFile;
-        qDebug() << "correctedFile: " << correctedFile;
         // There no header of emmax result file.
         this->pValCorrect(pValFile, false, correctionType, correctedFile);
 
@@ -963,7 +968,7 @@ bool MainWindow::callEmmaxGwas(QString phenotype, QString genotype, QString map,
 
         if (checkoutExistence(correctedFile))
         {
-//            ui->qqmanGwasResultLineEdit->setText(correctedFile);
+            //            ui->qqmanGwasResultLineEdit->setText(correctedFile);
             emit setLineEditTextSig(ui->qqmanGwasResultLineEdit, correctedFile);
             QThread::msleep(10);
         }
@@ -975,7 +980,7 @@ bool MainWindow::callEmmaxGwas(QString phenotype, QString genotype, QString map,
             emit setMsgBoxSig("Error", "Emmax GWAS error.");
             return false;
         }
-//            ui->qqmanGwasResultLineEdit->setText(out+"/"+name+"_"+pheFileBaseName+".ps");
+        //            ui->qqmanGwasResultLineEdit->setText(out+"/"+name+"_"+pheFileBaseName+".ps");
         emit setLineEditTextSig(ui->qqmanGwasResultLineEdit, out+"/"+name+"_"+pheFileBaseName+".ps");
         QThread::msleep(10);
     }
@@ -987,14 +992,6 @@ bool MainWindow::callEmmaxGwas(QString phenotype, QString genotype, QString map,
     file.remove(genoFileAbPath+"/"+genoFileBaseName+"_tmp.tfam");
     file.remove(genoFileAbPath+"/"+genoFileBaseName+"_tmp.log");
     file.remove(genoFileAbPath+"/"+genoFileBaseName+"_tmp.nosex");
-    if (emmaxParamWidget->isBNkinMatrix())
-    {
-        file.remove(genoFileAbPath+"/"+genoFileBaseName+"_tmp.hBN.kinf");
-    }
-    else
-    {
-        file.remove(genoFileAbPath+"/"+genoFileBaseName+"_tmp.hIBS.kinf");
-    }
 
     if (qualityControl->isLinkageFilterNeeded() && genotype != fileReader->getGenotypeFile())
     {
@@ -1091,7 +1088,7 @@ bool MainWindow::callPlinkGwas(QString phenotype, QString genotype, QString map,
 
     // Run GWAS(Set parameters)
     if(!plink.runGWAS(phenotype, genotype, map, covar, kinship, model,
-                     maf, mind, geno, out+"/"+name+"_"+pheFileBaseName))
+                      maf, mind, geno, out+"/"+name+"_"+pheFileBaseName))
     {
         return false;
     }
@@ -1108,7 +1105,7 @@ bool MainWindow::callPlinkGwas(QString phenotype, QString genotype, QString map,
 
     if (runningFlag && checkoutExistence(out+"/"+name+"_"+pheFileBaseName+".assoc."+model.toLower()))
     {
-//        ui->qqmanGwasResultLineEdit->setText(out+"/"+name+"_"+pheFileBaseName+".assoc."+model.toLower());
+        //        ui->qqmanGwasResultLineEdit->setText(out+"/"+name+"_"+pheFileBaseName+".assoc."+model.toLower());
         emit setLineEditTextSig(ui->qqmanGwasResultLineEdit,
                                 out+"/"+name+"_"+pheFileBaseName+".assoc."+model.toLower());
     }
@@ -1135,8 +1132,8 @@ void MainWindow::on_closeRunningWidget()
     {
         // Juage there are any tools running now.
         QMessageBox::StandardButton ret = QMessageBox::information(this, "WARNING",
-           "The project may be terminated if close the widget!   ",
-            QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+                                                                   "The project may be terminated if close the widget!   ",
+                                                                   QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
 
         if (ret == QMessageBox::Yes)
         {
@@ -1270,7 +1267,7 @@ bool MainWindow::makePheFile(QString const phenotype, QString const selectedPhen
         QStringList line = srcFileStream.readLine().split("\t", QString::SkipEmptyParts);
         if (selectedPheIndex >= line.length())
         {   // Any missing rate?
-             outLine = line[0] + "\t" + line[1] + "\tNA\n";
+            outLine = line[0] + "\t" + line[1] + "\tNA\n";
         }
         else
         {
@@ -1405,7 +1402,7 @@ void MainWindow::on_drawManPushButton_clicked()
             }
 
             emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                      "\nMake qqman input file, \n");
+                                            "\nMake qqman input file, \n");
             QThread::msleep(10);
             // Transform gwas result file type to input file type of qqman.
             QStringList qqmanFile = makeQQManInputFile(gwasResulFile); //   path/name.gemma_wald
@@ -1413,12 +1410,12 @@ void MainWindow::on_drawManPushButton_clicked()
             if (qqmanFile.isEmpty())
             {   // makeQQManInputFile error.
                 emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                          "\nMake qqman input file ERROR.\n");
+                                                "\nMake qqman input file ERROR.\n");
                 QThread::msleep(10);
                 throw -1;
             }
             emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                      "\nMake qqman input file OK.\n");
+                                            "\nMake qqman input file OK.\n");
             QThread::msleep(10);
 
             for (auto item:qqmanFile)
@@ -1428,20 +1425,20 @@ void MainWindow::on_drawManPushButton_clicked()
             }
 
             emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                      "\nDraw manhattan plot, \n");
+                                            "\nDraw manhattan plot, \n");
             QThread::msleep(10);
             if (!this->drawManhattan(qqmanFile, outList))
             {   // drawManhattan error
                 emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                          "\nDraw manhattan plot ERROR.\n");
+                                                "\nDraw manhattan plot ERROR.\n");
                 QThread::msleep(10);
                 throw -1;
             }
 
             emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                      "\nDraw manhattan plot OK." +
-                                      "\nmanhattan plot: \n" +
-                                      outList.join("\n")+"\n");
+                                            "\nDraw manhattan plot OK." +
+                                            "\nmanhattan plot: \n" +
+                                            outList.join("\n")+"\n");
             QThread::msleep(10);
 
             QFile file;
@@ -1483,7 +1480,7 @@ void MainWindow::on_drawQQPushButton_clicked()
             if (gwasResulFile.isEmpty())
             {   // Gwas result file is necessary.
                 emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                          "\nA GWAS result file is necessary.\n");
+                                                "\nA GWAS result file is necessary.\n");
                 QThread::msleep(10);
                 throw -1;
             }
@@ -1906,9 +1903,9 @@ void MainWindow::on_pcaRunPushButton_clicked()
             file.remove(binaryFile+".grm.id");
             file.remove(binaryFile+".grm.N.bin");
 
-//            ui->eigenvalueLineEdit->setText(out+"/"+genoFileBaseName+".eigenval");
+            //            ui->eigenvalueLineEdit->setText(out+"/"+genoFileBaseName+".eigenval");
             emit setLineEditTextSig(ui->eigenvalueLineEdit, out+"/"+genoFileBaseName+".eigenval");
-//            ui->eigenvectorLineEdit->setText(out+"/"+genoFileBaseName+".eigenvec");
+            //            ui->eigenvectorLineEdit->setText(out+"/"+genoFileBaseName+".eigenvec");
             emit setLineEditTextSig(ui->eigenvectorLineEdit, out+"/"+genoFileBaseName+".eigenvec");
         });
         while (!fu.isFinished())
@@ -2011,20 +2008,20 @@ void MainWindow::runPopLDdecaybyFamily(void)
             QString keepFileAbPath = keepFileInfo.absolutePath();
 
             emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                    "\nMake "+keepFileBaseName+".ped"+" and "+keepFileBaseName+".map, \n");
+                                            "\nMake "+keepFileBaseName+".ped"+" and "+keepFileBaseName+".map, \n");
             QThread::msleep(10);
             // Split ped and map file.
             if (genoFileSuffix == "ped")
             {
                 map = map.isNull() ? genoFileAbPath+"/"+genoFileBaseName+".map" : map;
                 plink.splitPlinkFile(genotype, map, keepFile,
-                        genoFileAbPath+"/"+keepFileBaseName);
+                                     genoFileAbPath+"/"+keepFileBaseName);
             }
             if (genoFileSuffix == "tped")
             {
                 map = map.isNull() ? genoFileAbPath+"/"+genoFileBaseName+".tfam" : map;
                 plink.splitTransposeFile(genotype, map, keepFile,
-                        genoFileAbPath+"/"+keepFileBaseName);
+                                         genoFileAbPath+"/"+keepFileBaseName);
             }
             if (genoFileSuffix == "bed")
             {
@@ -2036,7 +2033,7 @@ void MainWindow::runPopLDdecaybyFamily(void)
                 throw -1;
             }
             emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                "\n"+ keepFileBaseName + ".ped and " + keepFileBaseName + ".map OK.\n");
+                                            "\n"+ keepFileBaseName + ".ped and " + keepFileBaseName + ".map OK.\n");
             QThread::msleep(10);
             QFile file;
             file.remove(keepFile);
@@ -2046,8 +2043,8 @@ void MainWindow::runPopLDdecaybyFamily(void)
             QThread::msleep(10);
             // Make .genotype file.
             if (popLDdecay.makeGenotype(genoFileAbPath+"/"+keepFileBaseName+".ped",
-                                    genoFileAbPath+"/"+keepFileBaseName+".map",
-                                    genoFileAbPath+"/"+keepFileBaseName+".genotype"))
+                                        genoFileAbPath+"/"+keepFileBaseName+".map",
+                                        genoFileAbPath+"/"+keepFileBaseName+".genotype"))
             {
                 if (!this->runExTool(this->scriptpath+"poplddecay/plink2genotype",
                                      popLDdecay.getParamList()))
@@ -2062,7 +2059,7 @@ void MainWindow::runPopLDdecaybyFamily(void)
             else
             {
                 emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nMake "+keepFileBaseName+".genotype ERROR.\n");
+                                                "\nMake "+keepFileBaseName+".genotype ERROR.\n");
                 QThread::msleep(10);
                 isLD_OK = false;
                 throw -1;
@@ -2086,20 +2083,20 @@ void MainWindow::runPopLDdecaybyFamily(void)
                     throw -1;
                 }
 
-//                ui->ldResultLineEdit->setText(out+"/"+name+"_"+keepFileBaseName.split("_")[keepFileBaseName.split("_").length()-1]+".stat.gz");
+                //                ui->ldResultLineEdit->setText(out+"/"+name+"_"+keepFileBaseName.split("_")[keepFileBaseName.split("_").length()-1]+".stat.gz");
                 emit setLineEditTextSig(ui->ldResultLineEdit,
-                    out+"/"+name+"_"+keepFileBaseName.split("_").back()+".stat.gz");
+                                        out+"/"+name+"_"+keepFileBaseName.split("_").back()+".stat.gz");
                 QThread::msleep(10);
                 emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                    "\nLD OK. (FID: " +
-                    keepFileBaseName.split("_")[keepFileBaseName.split("_").length() - 1] + ")\n");
+                                                "\nLD OK. (FID: " +
+                                                keepFileBaseName.split("_")[keepFileBaseName.split("_").length() - 1] + ")\n");
                 QThread::msleep(10);
             }
             else
             {
                 emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                    "\nLD ERROR. (FID: " +
-                    keepFileBaseName.split("_")[keepFileBaseName.split("_").length() - 1] + ")\n");
+                                                "\nLD ERROR. (FID: " +
+                                                keepFileBaseName.split("_")[keepFileBaseName.split("_").length() - 1] + ")\n");
                 QThread::msleep(10);
                 isLD_OK = false;
                 throw -1;
@@ -2110,7 +2107,7 @@ void MainWindow::runPopLDdecaybyFamily(void)
         if (isLD_OK)
         {
             emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                "\nLD by family done. \n");
+                                            "\nLD by family done. \n");
             QThread::msleep(10);
         }
     } catch (...) {
@@ -2180,7 +2177,7 @@ void MainWindow::runPopLDdecaySingle(void)
         }
 
         emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                       "\nMake " + plinkFile + ".genotype,\n");
+                                        "\nMake " + plinkFile + ".genotype,\n");
         QThread::msleep(10);
         PopLDdecay popLDdecay;
         if (popLDdecay.makeGenotype(plinkFile+".ped", plinkFile+".map", plinkFile+".genotype"))
@@ -2226,7 +2223,7 @@ void MainWindow::runPopLDdecaySingle(void)
 
             if (checkoutExistence(out+"/"+name+".stat.gz"))
             {
-//                ui->ldResultLineEdit->setText(out+"/"+name+".stat.gz");
+                //                ui->ldResultLineEdit->setText(out+"/"+name+".stat.gz");
                 emit setLineEditTextSig(ui->ldResultLineEdit, out+"/"+name+".stat.gz");
                 QThread::msleep(10);
             }
@@ -2414,7 +2411,7 @@ void MainWindow::on_strucAnnoRunPushButton_clicked()
                 throw -1;
             }
             emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                              "\nGff to gtf, \n");
+                                            "\nGff to gtf, \n");
             QThread::msleep(10);
             if (!runExTool(this->toolpath+"gffread", annovar.getParamList()))
             {
@@ -2468,11 +2465,11 @@ void MainWindow::on_strucAnnoRunPushButton_clicked()
             QString refGenePrefix = gffFileBaseName;
 
             // table_annovar
-    //        if (!annovar.tableAnnovar(avinput, refGeneDir, refGenePrefix, outFile))
-    //        {
-    //            throw -1;
-    //        }
-    //        this->process->start(this->scriptpath+"annovar/table_annovar", annovar.getParamList());
+            //        if (!annovar.tableAnnovar(avinput, refGeneDir, refGenePrefix, outFile))
+            //        {
+            //            throw -1;
+            //        }
+            //        this->process->start(this->scriptpath+"annovar/table_annovar", annovar.getParamList());
 
             // annotate_variation
             if (!annovar.annotateVariation(avinput, refGeneDir, refGenePrefix, outFile))
@@ -2495,7 +2492,7 @@ void MainWindow::on_strucAnnoRunPushButton_clicked()
             QThread::msleep(10);
             if (runningFlag && checkoutExistence(outFile+".variant_functino"))
             {
-//                ui->varFuncFileLineEdit->setText(outFile+".variant_functino");
+                //                ui->varFuncFileLineEdit->setText(outFile+".variant_functino");
                 emit setLineEditTextSig(ui->varFuncFileLineEdit, outFile+".variant_functino");
             }
         });
@@ -2817,7 +2814,7 @@ void MainWindow::on_funcAnnoStepPushButton_clicked()
             QThread::msleep(10);
             if (runningFlag && checkoutExistence(sigSnpFile))
             {
-//                ui->snpPosLineEdit->setText(sigSnpPosFile);
+                //                ui->snpPosLineEdit->setText(sigSnpPosFile);
                 emit setLineEditTextSig(ui->snpPosLineEdit, sigSnpPosFile);
                 QThread::msleep(10);
             }
@@ -2903,11 +2900,11 @@ void MainWindow::on_pcaPlotPushButton_clicked()
     QString eigenvalFile = ui->eigenvalueLineEdit->text();
     QString eigenvecFile = ui->eigenvectorLineEdit->text();
     QString outFile = this->workDirectory->getOutputDirectory() + "/" +
-                      this->workDirectory->getProjectName() + "_pca.png";
+            this->workDirectory->getProjectName() + "_pca.png";
 
     if (eigenvalFile.isEmpty() ||
-        eigenvecFile.isEmpty() ||
-        outFile.isEmpty())
+            eigenvecFile.isEmpty() ||
+            outFile.isEmpty())
     {
         this->resetWindow();
         return;
@@ -2999,7 +2996,7 @@ bool MainWindow::runExTool(QString tool, QStringList param)
     connect(proc, SIGNAL(errMessageReady(QString)), this, SLOT(on_errMessageReady(QString)));
     connect(this, SIGNAL(terminateProcess()), proc, SLOT(on_terminateProcess()), Qt::DirectConnection);
 
-//     proc->execute(tool, param);
+    //     proc->execute(tool, param);
     proc->start(tool, param);
     if (!proc->waitForStarted())
     {
@@ -3011,11 +3008,11 @@ bool MainWindow::runExTool(QString tool, QStringList param)
     proc->waitForFinished(-1);
 
     bool ret = true;
-//    if (proc->exitCode() != Process::NormalExit)
-//    {
-//        emit runningMsgWidgetAppendText(proc->errorString());
-//        ret = false;
-//    }
+    //    if (proc->exitCode() != Process::NormalExit)
+    //    {
+    //        emit runningMsgWidgetAppendText(proc->errorString());
+    //        ret = false;
+    //    }
     proc->close();
     delete proc;
     proc = nullptr;
