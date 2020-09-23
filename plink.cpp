@@ -18,7 +18,7 @@ bool Plink::vcf2plink(QString vcfFile, QString out, QString maf, QString mind, Q
     this->paramlist.clear();            // Clear paramlist before set parameter.
     this->paramlist.append("--vcf");
     this->paramlist.append(vcfFile);
-
+    this->paramlist.append("--allow-extra-chr");
     if (!maf.isNull())
     {
         this->paramlist.append("--maf");
@@ -55,7 +55,7 @@ bool Plink::vcf2binary(QString vcfFile, QString out, QString maf, QString mind, 
     this->paramlist.clear();            // Clear paramlist before set parameter.
     this->paramlist.append("--vcf");
     this->paramlist.append(vcfFile);
-
+    this->paramlist.append("--allow-extra-chr");
     if (!maf.isNull())
     {
         this->paramlist.append("--maf");
@@ -90,7 +90,7 @@ bool Plink::vcf2transpose(QString vcfFile, QString out, QString maf, QString min
     this->paramlist.clear();            // Clear paramlist before set parameter.
     this->paramlist.append("--vcf");
     this->paramlist.append(vcfFile);
-
+    this->paramlist.append("--allow-extra-chr");
     if (!maf.isNull())
     {
         this->paramlist.append("--maf");
@@ -131,7 +131,7 @@ bool Plink::plink2transpose(QString pedFile, QString mapFile, QString out, QStri
     this->paramlist.append(pedFile);
     this->paramlist.append("--map");
     this->paramlist.append(mapFile);
-
+    this->paramlist.append("--allow-extra-chr");
     if (!maf.isNull())
     {
         this->paramlist.append("--maf");
@@ -173,7 +173,7 @@ bool Plink::plink2binary(QString pedFile, QString mapFile, QString out, QString 
     this->paramlist.append(pedFile);
     this->paramlist.append("--map");
     this->paramlist.append(mapFile);
-
+    this->paramlist.append("--allow-extra-chr");
     if (!maf.isNull())
     {
         this->paramlist.append("--maf");
@@ -211,7 +211,7 @@ bool Plink::transpose2binary(QString tpedFile, QString tfamFile, QString out, QS
     this->paramlist.append(tpedFile);
     this->paramlist.append("--tfam");
     this->paramlist.append(tfamFile);
-
+    this->paramlist.append("--allow-extra-chr");
     if (!maf.isNull())
     {
         this->paramlist.append("--maf");
@@ -249,7 +249,7 @@ bool Plink::transpose2plink(QString tpedFile, QString tfamFile, QString out, QSt
     this->paramlist.append(tpedFile);
     this->paramlist.append("--tfam");
     this->paramlist.append(tfamFile);
-
+    this->paramlist.append("--allow-extra-chr");
     if (!maf.isNull())
     {
         this->paramlist.append("--maf");
@@ -293,7 +293,7 @@ bool Plink::binary2transpose(QString binaryFile, QString out, QString maf, QStri
     this->paramlist.clear();            // Clear paramlist before set parameter.
     this->paramlist.append("--bfile");
     this->paramlist.append(binaryFile);
-
+    this->paramlist.append("--allow-extra-chr");
     if (!maf.isNull())
     {
         this->paramlist.append("--maf");
@@ -341,7 +341,7 @@ bool Plink::binary2plink(QString binaryFile, QString out, QString maf, QString m
     this->paramlist.clear();            // Clear paramlist before set parameter.
     this->paramlist.append("--bfile");
     this->paramlist.append(binaryFile);
-
+    this->paramlist.append("--allow-extra-chr");
     if (!maf.isNull())
     {
         this->paramlist.append("--maf");
@@ -570,7 +570,7 @@ bool Plink::runGWAS(QString phenotype, QString genotype, QString map, QString co
     {
         this->paramlist.append("--logistic");
     }
-
+    this->paramlist.append("--allow-extra-chr");
     this->paramlist.append("--allow-no-sex");
     this->paramlist.append("--out");
     this->paramlist.append(out);
@@ -599,7 +599,7 @@ void Plink::filterVcfFile(QString genotype, QString maf, QString mind, QString g
         this->paramlist.append("--geno");
         this->paramlist.append(geno);
     }
-
+    this->paramlist.append("--allow-extra-chr");
     this->paramlist.append("--recode");
     this->paramlist.append("vcf");
     this->paramlist.append("--out");
@@ -629,7 +629,7 @@ void Plink::filterPlinkFile(QString genotype, QString map, QString maf, QString 
         this->paramlist.append("--geno");
         this->paramlist.append(geno);
     }
-
+    this->paramlist.append("--allow-extra-chr");
     this->paramlist.append("--recode");
     this->paramlist.append("--out");
     this->paramlist.append(out);
@@ -640,7 +640,7 @@ void Plink::filterBinaryFile(QString genotype, QString maf, QString mind, QStrin
     this->paramlist.clear();
     this->paramlist.append("--bfile");
     this->paramlist.append(genotype);
-
+    this->paramlist.append("--allow-extra-chr");
     if (!maf.isNull())
     {
         this->paramlist.append("--maf");
@@ -669,7 +669,7 @@ void Plink::filterTransposeFile(QString genotype, QString map, QString maf, QStr
     this->paramlist.append(genotype);
     this->paramlist.append("--tfam");
     this->paramlist.append(map);
-
+    this->paramlist.append("--allow-extra-chr");
     if (!maf.isNull())
     {
         this->paramlist.append("--maf");

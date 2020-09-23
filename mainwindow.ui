@@ -31,7 +31,7 @@
    <string>MainWindow</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="res.qrc">
+   <iconset>
     <normaloff>:/new/icon/images/logo.ico</normaloff>:/new/icon/images/logo.ico</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
@@ -41,7 +41,7 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>170</x>
+      <x>210</x>
       <y>20</y>
       <width>591</width>
       <height>511</height>
@@ -60,7 +60,7 @@
      <enum>QTabWidget::Rounded</enum>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>3</number>
     </property>
     <property name="iconSize">
      <size>
@@ -1177,7 +1177,7 @@ border-radius:5px;//这个是改变成圆角边框;
       <property name="geometry">
        <rect>
         <x>370</x>
-        <y>180</y>
+        <y>260</y>
         <width>80</width>
         <height>26</height>
        </rect>
@@ -1193,7 +1193,7 @@ border-radius:5px;//这个是改变成圆角边框;
       <property name="geometry">
        <rect>
         <x>40</x>
-        <y>30</y>
+        <y>110</y>
         <width>221</width>
         <height>23</height>
        </rect>
@@ -1213,7 +1213,7 @@ border-radius:5px;//这个是改变成圆角边框;
       <property name="geometry">
        <rect>
         <x>40</x>
-        <y>190</y>
+        <y>270</y>
         <width>221</width>
         <height>23</height>
        </rect>
@@ -1249,7 +1249,7 @@ border-radius:5px;//这个是改变成圆角边框;
       <property name="geometry">
        <rect>
         <x>40</x>
-        <y>60</y>
+        <y>140</y>
         <width>421</width>
         <height>111</height>
        </rect>
@@ -1553,7 +1553,7 @@ border-radius:5px;//这个是改变成圆角边框;
       <property name="geometry">
        <rect>
         <x>40</x>
-        <y>220</y>
+        <y>20</y>
         <width>421</width>
         <height>81</height>
        </rect>
@@ -1569,13 +1569,13 @@ border-radius:5px;//这个是改变成圆角边框;
         <rect>
          <x>10</x>
          <y>10</y>
-         <width>401</width>
+         <width>402</width>
          <height>61</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout_5">
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_41">
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_43">
           <property name="minimumSize">
            <size>
             <width>80</width>
@@ -1595,25 +1595,44 @@ border-radius:5px;//这个是改变成圆角边框;
            </font>
           </property>
           <property name="text">
-           <string>p-value file</string>
+           <string>threshold</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="2">
-         <spacer name="horizontalSpacer_9">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Minimum</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
+        <item row="0" column="1" colspan="3">
+         <widget class="QLineEdit" name="annoPvalLineEdit">
+          <property name="minimumSize">
            <size>
-            <width>48</width>
-            <height>20</height>
+            <width>0</width>
+            <height>22</height>
            </size>
           </property>
-         </spacer>
+          <property name="layoutDirection">
+           <enum>Qt::LeftToRight</enum>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3" colspan="2">
+         <widget class="QPushButton" name="funcAnnoStepPushButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>26</height>
+           </size>
+          </property>
+          <property name="cursor">
+           <cursorShape>PointingHandCursor</cursorShape>
+          </property>
+          <property name="text">
+           <string>Func Step</string>
+          </property>
+         </widget>
         </item>
         <item row="1" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout_16">
@@ -1659,22 +1678,28 @@ border-radius:5px;//这个是改变成圆角边框;
           </item>
          </layout>
         </item>
-        <item row="0" column="1" colspan="3">
-         <widget class="QLineEdit" name="annoPvalLineEdit">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_41">
           <property name="minimumSize">
            <size>
-            <width>0</width>
-            <height>22</height>
+            <width>80</width>
+            <height>0</height>
            </size>
           </property>
-          <property name="layoutDirection">
-           <enum>Qt::LeftToRight</enum>
+          <property name="maximumSize">
+           <size>
+            <width>80</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <weight>50</weight>
+            <bold>false</bold>
+           </font>
           </property>
           <property name="text">
-           <string/>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+           <string>p-value file</string>
           </property>
          </widget>
         </item>
@@ -1718,33 +1743,8 @@ border-radius:5px;//这个是改变成圆角边框;
           </property>
          </widget>
         </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_43">
-          <property name="minimumSize">
-           <size>
-            <width>80</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>80</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="font">
-           <font>
-            <weight>50</weight>
-            <bold>false</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>threshold</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3" colspan="2">
-         <widget class="QPushButton" name="funcAnnoStepPushButton">
+        <item row="1" column="2">
+         <widget class="QPushButton" name="structAnnoStepPushButton">
           <property name="minimumSize">
            <size>
             <width>0</width>
@@ -1755,7 +1755,7 @@ border-radius:5px;//这个是改变成圆角边框;
            <cursorShape>PointingHandCursor</cursorShape>
           </property>
           <property name="text">
-           <string>Step</string>
+           <string>Struct Step</string>
           </property>
          </widget>
         </item>
@@ -2993,8 +2993,6 @@ border-radius:5px;//这个是改变成圆角边框;
    <header location="global">mtoolbutton.h</header>
   </customwidget>
  </customwidgets>
- <resources>
-  <include location="res.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

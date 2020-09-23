@@ -55,6 +55,7 @@ signals:
     void setButtonEnabledSig(QAbstractButton *, bool);
     void setGraphViewerGraphSig(QStringList plot);
     void resetWindowSig();
+    void setMsgBoxSig(const QString &title, const QString &text);
 
 private slots:
     // for FileReader
@@ -100,6 +101,7 @@ private slots:
     void graphViewer_clicked_slot();    // on_*** is implicit slot function
     // Structural annotation
     void on_gffFileBrowButton_clicked();
+    void on_structAnnoStepPushButton_clicked();
     void on_strucAnnoRunPushButton_clicked();
     void on_fastaFileBrowButton_clicked();
     void on_avinFileBrowButton_clicked();   
@@ -126,6 +128,9 @@ private slots:
     void on_setGraphViewerGraph(QStringList plot);
     // Reset Windw SLOT
     void on_resetWindowSig();
+    // Set message box
+    void on_setMsgBoxSig(const QString &title, const QString &text);
+
 
 private:
     Ui::MainWindow *ui;
@@ -136,8 +141,8 @@ private:
     QString toolpath = QCoreApplication::applicationDirPath() + "/tools/";    // Realease
     QString scriptpath = QCoreApplication::applicationDirPath() + "/script/";
 #else
-    QString toolpath = "/home/dengchao/Documents/code/H_G/tools/";
-    QString scriptpath = "/home/dengchao/Documents/code/H_G/script/";
+    QString toolpath = "/home/dengchao/Documents/code/AquaGWAS/tools/";
+    QString scriptpath = "/home/dengchao/Documents/code/AquaGWAS/script/";
 #endif
     // Basic association parameters.
     FileReader *fileReader;             // Read file, and save the directory.

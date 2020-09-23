@@ -43,7 +43,7 @@ MainWindow::MainWindow(QWidget *parent)
 #ifdef QT_NO_DEBUG
     workDirectory->setOutputDirectory(QDir::currentPath());
 #else
-    workDirectory->setOutputDirectory("/home/dengchao/Desktop/test");
+    workDirectory->setOutputDirectory("/media/dengchao/data/test");
 #endif
     ui->projectNameLineEdit->setText(workDirectory->getProjectName());
     ui->outdirLineEdit->setText(workDirectory->getOutputDirectory()+"/"+workDirectory->getProjectName());
@@ -64,6 +64,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(this, SIGNAL(setGraphViewerGraphSig(QStringList)),
             this, SLOT(on_setGraphViewerGraph(QStringList)));
     connect(this, SIGNAL(resetWindowSig()), this, SLOT(on_resetWindowSig()));
+    connect(this, SIGNAL(setMsgBoxSig(const QString &, const QString &)),
+            this, SLOT(on_setMsgBoxSig(const QString &, const QString &)));
     // connect MToolButton->rightClick
     connect(ui->pheFileToolButton, SIGNAL(closeFileSig()), this, SLOT(on_pheFileToolButton_closeFileSig()));
     connect(ui->genoFileToolButton, SIGNAL(closeFileSig()), this, SLOT(on_genoFileToolButton_closeFileSig()));
@@ -560,7 +562,7 @@ bool MainWindow::callGemmaGwas(QString phenotype, QString genotype, QString map,
 
         if (!this->checkoutExistence(filteredSnpIDFile))
         {
-            QMessageBox::information(nullptr, "Error", "Linkage filter error.");
+            emit setMsgBoxSig("Error", "Linkage filter error.");
             return false;
         }
 
@@ -586,7 +588,7 @@ bool MainWindow::callGemmaGwas(QString phenotype, QString genotype, QString map,
         if (!this->checkoutExistence(genotype) ||
             !this->checkoutExistence(map))
         {
-            QMessageBox::information(this, "Error", "Extaract snp after linkage filter error.");
+            emit setMsgBoxSig("Error", "Extaract snp after linkage filter error.");
             return false;
         }
     }
@@ -728,24 +730,30 @@ bool MainWindow::callGemmaGwas(QString phenotype, QString genotype, QString map,
         objDir.setPath(out+"/output"+QString::number(i));
     }
     // It will be wrong when "/output" change to "/output/"
-    dir.rename(QDir::currentPath() + "/output", out+"/output"+(i==0?"":QString::number(i)));
+    bool renameRes = dir.rename(QDir::currentPath() + "/output", objDir.path());
+    // Problems arise when the current path and the target path are different partitions
+    if (!renameRes)
+    {
+        emit setMsgBoxSig("Warning", "Can't write result file into " +
+                          objDir.path() +
+                          ", the result file will be written in " +
+                          QDir::currentPath() + "/output");
+        objDir.setPath(QDir::currentPath()+ "/output");
+    }
 
     // Correct p value
     QString correctionType = this->gemmaParamWidget->getCorrectionType();
     if (model == "LMM" && !correctionType.isNull())
     {
-        QString pValFile = out+"/output"
-                +(i==0?"":QString::number(i))+"/"+name+"_"+pheFileBaseName+".assoc.txt";
-        QString correctedFile = out+"/output"
-                +(i==0?"":QString::number(i))+"/"+name+"_"+pheFileBaseName+"_corr.assoc.txt";
+        QString pValFile = objDir.path()+"/"+name+"_"+pheFileBaseName+".assoc.txt";
+        QString correctedFile = objDir.path()
+                +"/"+name+"_"+pheFileBaseName+"_corr.assoc.txt";
 
-        qDebug() << "pValFile: " << pValFile;
-        qDebug() << "correctedFile: " << correctedFile;
         this->pValCorrect(pValFile, true, correctionType, correctedFile);
 
         if (!this->checkoutExistence(correctedFile))
         {
-            QMessageBox::information(this, "Error", "Gemma corrected error.");
+            emit setMsgBoxSig("Error", "Gemma corrected error.");
             return false;
         }
 
@@ -757,17 +765,15 @@ bool MainWindow::callGemmaGwas(QString phenotype, QString genotype, QString map,
     }
     else if (model == "LMM")
     {
-        if (this->runningFlag && !this->checkoutExistence(out+"/output"
-            +(i==0?"":QString::number(i))+"/"+name+"_"+pheFileBaseName+".assoc.txt"))
+        if (this->runningFlag &&
+            !this->checkoutExistence(objDir.path()+"/"+name+"_"+pheFileBaseName+".assoc.txt"))
         {
-            QMessageBox::information(nullptr, "Error", "Gemma GWAS error.");
+            emit setMsgBoxSig("Error", "Gemma GWAS error.");
             return false;
         }
 
-//        ui->qqmanGwasResultLineEdit->setText(out+"/output"
-//            +(i==0?"":QString::number(i))+"/"+name+"_"+pheFileBaseName+".assoc.txt");
-        emit setLineEditTextSig(ui->qqmanGwasResultLineEdit, out+"/output"
-                 +(i==0?"":QString::number(i))+"/"+name+"_"+pheFileBaseName+".assoc.txt");
+        emit setLineEditTextSig(ui->qqmanGwasResultLineEdit, objDir.path()
+                 +"/"+name+"_"+pheFileBaseName+".assoc.txt");
         QThread::msleep(10);
     }
 
@@ -951,7 +957,7 @@ bool MainWindow::callEmmaxGwas(QString phenotype, QString genotype, QString map,
 
         if (!this->checkoutExistence(correctedFile))
         {
-            QMessageBox::information(this, "Error", "Gemma corrected error.");
+            emit setMsgBoxSig("Error", "Gemma corrected error.");
             return false;
         }
 
@@ -966,7 +972,7 @@ bool MainWindow::callEmmaxGwas(QString phenotype, QString genotype, QString map,
     {
         if (this->runningFlag && !checkoutExistence(out+"/"+name+"_"+pheFileBaseName+".ps"))
         {
-            QMessageBox::information(nullptr, "Error", "Emmax GWAS error.");
+            emit setMsgBoxSig("Error", "Emmax GWAS error.");
             return false;
         }
 //            ui->qqmanGwasResultLineEdit->setText(out+"/"+name+"_"+pheFileBaseName+".ps");
@@ -1049,7 +1055,7 @@ bool MainWindow::callPlinkGwas(QString phenotype, QString genotype, QString map,
 
         if (!this->checkoutExistence(filteredSnpIDFile))
         {
-            QMessageBox::information(this, "Error", "Linkage filter error.");
+            emit setMsgBoxSig("Error", "Linkage filter error.");
             return false;
         }
 
@@ -1078,7 +1084,7 @@ bool MainWindow::callPlinkGwas(QString phenotype, QString genotype, QString map,
 
         if (!this->checkoutExistence(genotype) || !this->checkoutExistence(map))
         {
-            QMessageBox::information(nullptr, "Error", "Extract snp after linkage filter error.");
+            emit setMsgBoxSig("Error", "Extract snp after linkage filter error.");
             return false;
         }
     }
@@ -1096,7 +1102,7 @@ bool MainWindow::callPlinkGwas(QString phenotype, QString genotype, QString map,
 
     if (this->runningFlag && !this->checkoutExistence(out+"/"+name+"_"+pheFileBaseName+".assoc."+model.toLower()))
     {
-        QMessageBox::information(nullptr, "Error", "Plink GWAS error.");
+        emit setMsgBoxSig("Error", "Plink GWAS error.");
         return false;
     }
 
@@ -1695,7 +1701,7 @@ QStringList MainWindow::makeQQManInputFile(QString pvalueFile)
     QTextStream gwasResultFileStream(&gwasResultFile);
     if (!gwasResultFile.open(QIODevice::ReadOnly))
     {
-        QMessageBox::information(nullptr, "Error", "Open gwasResultFile error.  ");
+        emit setMsgBoxSig("Error", "Open gwasResultFile error.  ");
         return qqmanInFileList;
     }
 
@@ -1726,7 +1732,7 @@ QStringList MainWindow::makeQQManInputFile(QString pvalueFile)
 
             if (SNP.split(":").length() < 2)
             {
-                QMessageBox::information(nullptr, "Error", ".ps file format error(maybe without chr).   ");
+                emit setMsgBoxSig("Error", ".ps file format error(maybe without chr).   ");
                 return qqmanInFileList;
             }
             QString CHR = SNP.split(":")[0].remove(0, 3); // e.g. remove "chr" in "chr12", to get "12"
@@ -2551,7 +2557,7 @@ void MainWindow::on_avinFileBrowButton_clicked()
  */
 void MainWindow::on_snpPosBrowButton_clicked()
 {
-    QFileDialog *fileDialog = new QFileDialog(this, "Open SNP postion file", this->workDirectory->getOutputDirectory(),
+    QFileDialog *fileDialog = new QFileDialog(this, "Open SNP postion file", "",
                                               "all(*)");
     fileDialog->setViewMode(QFileDialog::Detail);
 
@@ -2574,7 +2580,7 @@ void MainWindow::on_snpPosBrowButton_clicked()
  */
 void MainWindow::on_baseFileBrowButton_clicked()
 {
-    QFileDialog *fileDialog = new QFileDialog(this, "Open annotation base file", this->workDirectory->getOutputDirectory(),
+    QFileDialog *fileDialog = new QFileDialog(this, "Open annotation base file", "",
                                               "base(all(*)");
     fileDialog->setViewMode(QFileDialog::Detail);
 
@@ -2620,7 +2626,7 @@ void MainWindow::on_varFuncFileBrowButton_clicked()
  */
 void MainWindow::on_exVarFuncFileBrowButton_clicked()
 {
-    QFileDialog *fileDialog = new QFileDialog(this, "Open exonic variant function file", this->workDirectory->getOutputDirectory(),
+    QFileDialog *fileDialog = new QFileDialog(this, "Open exonic variant function file", "",
                                               "ex_var_func(*.exonic_variant_function);;(all(*)");
     fileDialog->setViewMode(QFileDialog::Detail);
 
@@ -2851,7 +2857,7 @@ void MainWindow::on_annoPvalBrowButton_clicked()
 
 void MainWindow::on_eigenvalFileBrowButton_clicked()
 {
-    QFileDialog *fileDialog = new QFileDialog(this, "Open eigenval file", this->workDirectory->getOutputDirectory(),
+    QFileDialog *fileDialog = new QFileDialog(this, "Open eigenval file", "",
                                               "eigenval(*.eigenval);;all(*)");
     fileDialog->setViewMode(QFileDialog::Detail);
 
@@ -2870,7 +2876,7 @@ void MainWindow::on_eigenvalFileBrowButton_clicked()
 
 void MainWindow::on_eigenvecFileBrowButton_clicked()
 {
-    QFileDialog *fileDialog = new QFileDialog(this, "Open eigenvec file", this->workDirectory->getOutputDirectory(),
+    QFileDialog *fileDialog = new QFileDialog(this, "Open eigenvec file", "",
                                               "eigenvec(*.eigenvec);;all(*)");
     fileDialog->setViewMode(QFileDialog::Detail);
 
@@ -2997,7 +3003,7 @@ bool MainWindow::runExTool(QString tool, QStringList param)
     proc->start(tool, param);
     if (!proc->waitForStarted())
     {
-        QMessageBox::information(nullptr, "Error", "Can't open " + tool);
+        emit setMsgBoxSig("Error", "Can't open " + tool);
         delete proc;
         proc = nullptr;
         return false;
@@ -3071,4 +3077,14 @@ void MainWindow::on_setGraphViewerGraph(QStringList plot)
 void MainWindow::on_resetWindowSig()
 {
     this->resetWindow();
+}
+
+void MainWindow::on_setMsgBoxSig(const QString &title, const QString &text)
+{
+    QMessageBox::information(nullptr, title, text);
+}
+
+void MainWindow::on_structAnnoStepPushButton_clicked()
+{
+
 }
