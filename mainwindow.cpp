@@ -74,6 +74,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->covarFileToolButton, SIGNAL(closeFileSig()), this, SLOT(on_covarFileToolButton_closeFileSig()));
     // Graph Viewer
     connect(graphViewer, SIGNAL(doubleClicked()), this, SLOT(graphViewer_clicked_slot()));
+
+    // Add executable permission to the calling tool or script which need executable permission.
+    addFilesExecutePermission(this->toolpath);
+    addFilesExecutePermission(this->scriptpath+"annovar/");
+    addFilesExecutePermission(this->scriptpath+"poplddecay/");
 }
 
 MainWindow::~MainWindow()
@@ -3192,4 +3197,19 @@ void MainWindow::on_resetWindowSig()
 void MainWindow::on_setMsgBoxSig(const QString &title, const QString &text)
 {
     QMessageBox::information(nullptr, title, text);
+}
+
+/**
+ * @brief MainWindow::addFilesExecutePermission
+ *          Add execute permission of files in directory.(All file in directory)
+ * @param directory     A path QString, which contains files need to add execute permission.
+ */
+void MainWindow::addFilesExecutePermission(QString directory)
+{
+    QDir dir(directory);
+    QStringList fileList = dir.entryList();
+    for (auto item:fileList)
+    {
+        QProcess::execute("chmod", QStringList()<< "+x" << directory+item);
+    }
 }

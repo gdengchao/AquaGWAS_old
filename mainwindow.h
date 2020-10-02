@@ -183,5 +183,6 @@ private:
     bool runExTool(QString tool, QStringList param);
     // Checkout file existence.
     bool checkoutExistence(QString filePath);
+    void addFilesExecutePermission(QString dir);
 };
 #endif // MAINWINDOW_H
