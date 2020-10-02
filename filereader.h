@@ -21,7 +21,9 @@ public:
     QString getCovariateFile(void);
     void setKinshipFile(QString const dir);
     QString getKinshipFile(void);
+
     QStringList getFIDList(QString const src, int col);
+    bool transformCovariateFile(QString srcCovar, QString desCovar);
 
 private:
     QString phenotypeFile;

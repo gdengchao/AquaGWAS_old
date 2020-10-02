@@ -46,7 +46,7 @@ bool Gemma::runGWAS(QString binGenoBaseName, QString phenotype, QString covariat
                     QString out, QString model, QMap<QString, QString> moreParam)
 {
     this->paramlist.clear();            // Clear paramlist before set parameter.
-    if (binGenoBaseName.isNull() || phenotype.isNull() || kinship.isNull() || model.isNull())
+    if (binGenoBaseName.isNull() || phenotype.isNull() || model.isNull())
     {
         if (phenotype.isNull())
         {
@@ -72,8 +72,8 @@ bool Gemma::runGWAS(QString binGenoBaseName, QString phenotype, QString covariat
         this->paramlist.append("2");
         if (!covariate.isNull())    // Can't for BSLMM
         {
-//            this->paramlist.append("-c");
-//            this->paramlist.append(covariate);
+            this->paramlist.append("-c");
+            this->paramlist.append(covariate);
         }
     }
 
@@ -81,8 +81,8 @@ bool Gemma::runGWAS(QString binGenoBaseName, QString phenotype, QString covariat
     {  // gemma -bfile 222_filter1 -bslmm 1 -n 2 -o tmp
         this->paramlist.append("-bslmm");
         this->paramlist.append(moreParam["bslmmmodel"]);
-//        this->paramlist.append("-n");
-//        this->paramlist.append("2");
+        this->paramlist.append("-n");
+        this->paramlist.append("2");
     }
 
     this->paramlist.append("-o");
@@ -156,7 +156,10 @@ bool Gemma::phe_fam_Preparation(QString phe, QString fam)
 
     famFile.remove();   // remove original file.
     // Rename new file to original file name.
-    tmpFamFile.rename(tmpFamFileAbFilePath, famFileAbPath+"/"+famFileName);
+    if (!tmpFamFile.rename(tmpFamFileAbFilePath, famFileAbPath+"/"+famFileName))
+    {
+        return false;
+    }
 
     return true;
 }

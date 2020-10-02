@@ -9,7 +9,7 @@ FuncAnnotator::FuncAnnotator()
  * @brief FunctionalAnnotator::filterSNP
  *      select SNP whose p-value bigger than threshold to out file.
  *      the threhold is -log(thBase * 10 ^ thExpo)
- * @param pvalFile      a file the last column is p value.
+ * @param pvalFile      a header is necessary, the last column is p-value
  * @param thBase        base of threshold
  * @param thExpo        exponent of threshold
  * @param out           a file to store SNP which is selected.
@@ -21,6 +21,39 @@ bool FuncAnnotator::filterSNP(QString const pvalFilePath, QString const thBase,
     if (pvalFilePath.isNull() || thBase.isNull() || thExpo.isNull() || outFilePath.isNull())
     {
         return false;
+    }
+
+    QFileInfo pvalueFileInfo(pvalFilePath);
+    QString pvalueFileAbPath = pvalueFileInfo.absolutePath();
+    QString pvalueFileBaseName = pvalueFileInfo.baseName();
+    QString pvalueFileSuffix = pvalueFileInfo.suffix();
+    QString pvalueFileComSuffix = pvalueFileInfo.completeSuffix();
+
+    int snpIDIndex;
+    if ( pvalueFileComSuffix == "assoc.linear" || pvalueFileComSuffix == "assoc.logistic")
+    {   // plink
+        /* .assoc.linear
+         * .assoc.logistic:
+         *      CHR SNP BP A1 TEST NMISS OR STAT P
+         */
+        snpIDIndex = 1;
+    }
+
+    if (pvalueFileSuffix == "ps")
+    {   // Emmax output file.
+        /*.ps:
+         *      [SNP ID(CHR:BP)], [beta], [p-value] (header, don't exist in file)
+         *      chr0:39616  0.7571908167    0.2146455451
+         */
+        snpIDIndex = 0;
+    }
+
+    if (pvalueFileComSuffix == "assoc.txt")
+    {   // Gemma LMM
+        /* .assoc.txt:
+         *  chr rs ps n_miss allele1 allele0 af beta se logl_H1 l_remle l_mle p_wald p_lrt p_score
+         */
+        snpIDIndex = 1;
     }
 
     int thresholdBase = thBase.toInt();
@@ -38,13 +71,15 @@ bool FuncAnnotator::filterSNP(QString const pvalFilePath, QString const thBase,
     QTextStream pvalFileStream(&pvalFile);
     QTextStream outFileStream(&outFile);
 
+    pvalFileStream.readLine();  // Discard the header in the first line.
     while (!pvalFileStream.atEnd())
     {
         QString curLine = pvalFileStream.readLine();
-        QStringList curLineList = curLine.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+        QStringList curLineList = curLine.replace("NA", "-9").split(QRegExp("\\s+"), QString::SkipEmptyParts);
         if (-log10f(curLineList.constLast().toFloat()) >= threshold)
         {
-            outFileStream << curLine << endl;
+            outFileStream << curLineList[snpIDIndex] << "\t"
+                          << curLineList.constLast() << endl;
         }
     }
     pvalFile.close();
@@ -56,7 +91,7 @@ bool FuncAnnotator::filterSNP(QString const pvalFilePath, QString const thBase,
 /**
  * @brief extractPos
  *      Extrac position of SNP and save to outFile.(reserve p-value)
- * @param pvalFilePath  p-value file (Have been fitered)
+ * @param pvalFilePath  p-value file (Two column: SNP_ID P-VAL)
  * @param mapFilePath   map file(There position info of SNP)
  * @param outFilePath   output file(SNP_ID, p-value, CHR, BP)
  * @return
@@ -79,7 +114,7 @@ bool FuncAnnotator::extractPos(QString const pvalFilePath, QString const mapFile
     while (!pvalFileStream.atEnd())
     {
         QStringList curLine = pvalFileStream.readLine().split(QRegExp("\\s+"), QString::SkipEmptyParts);
-        snpIDMap.insert(curLine[0], curLine[0]+"\t"+curLine[2]);   // cut the SNP_ID and p-value
+        snpIDMap.insert(curLine[0], curLine[0]+"\t"+curLine[1]);   // cut the SNP_ID and p-value
     }
 
     QFile mapFile(mapFilePath);
@@ -102,7 +137,7 @@ bool FuncAnnotator::extractPos(QString const pvalFilePath, QString const mapFile
         }
     }
 
-    return true;
+     return true;
 }
 
 /**

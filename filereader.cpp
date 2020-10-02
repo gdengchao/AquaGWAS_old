@@ -90,3 +90,45 @@ QStringList FileReader::getFIDList(QString const src, int col)
     }
     return fidList;
 }
+
+/**
+ * @brief transformCovariateFile
+ * @param srcCovar                      FID IID 1 covar_1 covar_2 ... covar_n
+ * @param desCovar                      1 covar_1 covar_2 ... covar_n
+ */
+bool FileReader::transformCovariateFile(QString srcCovar, QString desCovar)
+{
+    if (srcCovar.isNull() || desCovar.isNull())
+    {
+        return false;
+    }
+
+    QFile srcCovarFile(srcCovar);
+    QFile desCovarFile(desCovar);
+
+    QTextStream srcCovarFileStream(&srcCovarFile);
+    QTextStream desCovarFileStream(&desCovarFile);
+
+    if (!srcCovarFile.open(QIODevice::ReadOnly) ||
+        !desCovarFile.open(QIODevice::ReadWrite))
+    {   // Open file error.
+        return false;
+    }
+    while (!srcCovarFileStream.atEnd())
+    {   // Read file line by line respectively.
+        QString srcCovarCurLine = srcCovarFileStream.readLine();
+        // Replace "NA" to "-9"
+        QStringList srcCovarCurLineList =
+            srcCovarCurLine/*.replace("NA", "-9")*/.split(QRegExp("\\s+"),
+                                    QString::SkipEmptyParts);
+        srcCovarCurLineList.removeFirst();
+        srcCovarCurLineList.removeFirst();
+
+        desCovarFileStream << srcCovarCurLineList.join("\t") << endl;
+    }
+    // Close file finally.
+    srcCovarFile.close();
+    desCovarFile.close();
+
+    return true;
+}

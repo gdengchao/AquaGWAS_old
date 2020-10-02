@@ -658,7 +658,8 @@ bool MainWindow::callGemmaGwas(QString phenotype, QString genotype, QString map,
         gemma.phe_fam_Preparation(phenotype, binaryFile+".fam");
     }
 
-    if (kinship.isNull() && this->gemmaParamWidget->isMakeRelatedMatAuto())
+    if (kinship.isNull() && model == "LMM"
+       && this->gemmaParamWidget->isMakeRelatedMatAuto())
     {
         if (!gemma.makeKinship(binaryFile, genoFileBaseName+"_tmp", moreParam))
         {
@@ -680,13 +681,28 @@ bool MainWindow::callGemmaGwas(QString phenotype, QString genotype, QString map,
         {
             kinship = QDir::currentPath() + "/output/" + genoFileBaseName+"_tmp" + ".sXX.txt";
         }
+
+        // Retain and open the kinship file generated.
         ui->kinFileToolButton->setShowMenuFlag(true);
         ui->kinFileToolButton->setIcon(QIcon(":/new/icon/images/file.png"));
         this->fileReader->setKinshipFile(kinship);
-
         QFileInfo  kinFileInfo(kinship);
         QString fileName = kinFileInfo.fileName(); // Get the file name from a path.
         ui->kinFileLabel->setText(fileName);
+    }
+
+    if (!covar.isNull())
+    {
+        QString desCovar = covar+".tmp";
+        if (!this->fileReader->transformCovariateFile(covar, desCovar))
+        {
+            return false;
+        }
+        if (!QFile::exists(desCovar))
+        {
+            return false;
+        }
+        covar = desCovar;
     }
 
     if (!gemma.runGWAS(genoFileAbPath+"/"+genoFileBaseName+"_tmp", phenotype, covar, kinship,
@@ -928,10 +944,11 @@ bool MainWindow::callEmmaxGwas(QString phenotype, QString genotype, QString map,
         {
             kinship = genoFileAbPath + "/" + genoFileBaseName+"_tmp" + ".hIBS.kinf";
         }
+
+        // Retain and open the kinship file generated.
         ui->kinFileToolButton->setShowMenuFlag(true);
         ui->kinFileToolButton->setIcon(QIcon(":/new/icon/images/file.png"));
         this->fileReader->setKinshipFile(kinship);
-
         QFileInfo  kinFileInfo(kinship);
         QString fileName = kinFileInfo.fileName(); // Get the file name from a path.
         ui->kinFileLabel->setText(fileName);
@@ -2818,8 +2835,6 @@ void MainWindow::on_funcAnnoStepPushButton_clicked()
                 emit setLineEditTextSig(ui->snpPosLineEdit, sigSnpPosFile);
                 QThread::msleep(10);
             }
-            ui->funcAnnoRunPushButton->setEnabled(true);
-            qApp->processEvents();
         });
         while (!fu.isFinished())
         {
@@ -2829,6 +2844,104 @@ void MainWindow::on_funcAnnoStepPushButton_clicked()
         this->resetWindow();
     }
 
+    ui->funcAnnoRunPushButton->setEnabled(true);
+    qApp->processEvents();
+    this->resetWindow();
+    this->runningFlag = false;
+}
+
+void MainWindow::on_structAnnoStepPushButton_clicked()
+{
+    if (this->runningFlag)
+    {
+        QMessageBox::information(nullptr, "Error", "A project is running now.");
+        return;
+    }
+    this->runningFlag = true;
+    ui->structAnnoStepPushButton->setEnabled(false);
+    qApp->processEvents();
+
+    QString vcfFile = this->fileReader->getGenotypeFile();
+
+    QFileInfo vcfFileInfo(vcfFile);
+    QString vcfFileAbPath = vcfFileInfo.absolutePath();
+    QString vcfFileBaseName = vcfFileInfo.baseName();
+
+    QString avinput = vcfFileAbPath + "/" + vcfFileBaseName + ".avinput";
+
+
+    try {
+//        if (vcfFile.isNull() || !isVcfFile(vcfFile))
+//        {
+//            QMessageBox::information(nullptr, "Error", "A .vcf file is necessary.");
+//            throw -1;
+//        }
+
+        QString pvalFile = ui->annoPvalLineEdit->text();    // p-value file(the first column is SNP_ID and the last column is p-value)
+        if (pvalFile.isNull() || pvalFile.isEmpty())
+        {
+            QMessageBox::information(nullptr, "Error", "A p-value file is necessary.");
+            throw -1;
+        }
+
+        QFileInfo pvalFileInfo(pvalFile);
+        QString pvalFileAbPath = pvalFileInfo.absolutePath();
+        QString pvalFileBaseName = pvalFileInfo.baseName();
+
+        QString thBase = ui->annoThBaseLineEdit->text();    // Threshold base number.
+        QString thExpo = ui->annoThExpoLineEdit->text();    // Threshold exponent.
+
+        if (thBase.isEmpty() || thExpo.isEmpty())
+        {
+            QMessageBox::information(nullptr, "Error", "Please set the threshold.");
+            throw -1;
+        }
+
+        QString sigSnpFile = pvalFileAbPath + "/" + pvalFileBaseName + "_sig";   // to save SNP after filter.
+        QFuture<void> fu = QtConcurrent::run(QThreadPool::globalInstance(), [&]()
+        {
+            QStringList snpIDList;
+            Annovar annovar;
+
+            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
+                                            "\nFilter SNP above threshold,\n");
+            QThread::msleep(10);
+            if (!annovar.filterSNP(pvalFile, thBase, thExpo, snpIDList))
+            {
+                throw -1;
+            }
+
+            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
+                                            "\nFilter SNP above threshold OK\n");
+            QThread::msleep(10);
+            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
+                                            "\nMake .avinput,\n");
+            QThread::msleep(10);
+            if (!annovar.vcf2avinput(vcfFile, snpIDList, avinput))
+            {
+                throw -1;
+            }
+
+            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
+                                            "\nMake .avinput OK\n");
+
+            if (runningFlag && checkoutExistence(sigSnpFile))
+            {
+                //                ui->snpPosLineEdit->setText(sigSnpPosFile);
+                emit setLineEditTextSig(ui->avinFileLineEdit, avinput);
+                QThread::msleep(10);
+            }
+        });
+        while (!fu.isFinished())
+        {
+            qApp->processEvents(QEventLoop::ExcludeUserInputEvents, 200);
+        }
+    } catch (...) {
+        this->resetWindow();
+    }
+
+    ui->structAnnoStepPushButton->setEnabled(true);
+    qApp->processEvents();
     this->resetWindow();
     this->runningFlag = false;
 }
@@ -3079,9 +3192,4 @@ void MainWindow::on_resetWindowSig()
 void MainWindow::on_setMsgBoxSig(const QString &title, const QString &text)
 {
     QMessageBox::information(nullptr, title, text);
-}
-
-void MainWindow::on_structAnnoStepPushButton_clicked()
-{
-
 }

@@ -128,3 +128,111 @@ bool Annovar::annotateVariation(QString avinput, QString refGeneDir, QString ref
 
     return true;
 }
+
+/**
+ * @brief FunctionalAnnotator::filterSNP
+ *      select SNP whose p-value bigger than threshold to out file.
+ *      the threhold is -log(thBase * 10 ^ thExpo)
+ * @param pvalFile      a file the last column is p value.(a header is necessary)
+ * @param thBase        base of threshold
+ * @param thExpo        exponent of threshold
+ * @param snpID         save the SNP ID after filter
+ * @return              fail(false) or success(true).
+ */
+bool Annovar::filterSNP(QString const pvalFilePath, QString const thBase,
+                              QString const thExpo, QStringList &snpID)
+{
+    if (pvalFilePath.isNull() || thBase.isNull() || thExpo.isNull())
+    {
+        return false;
+    }
+
+    int thresholdBase = thBase.toInt();
+    int thresholdExpo = thExpo.toInt();
+    float threshold = -log10f(thresholdBase*pow10f(thresholdExpo));
+
+    QFile pvalFile(pvalFilePath);
+
+    if (!pvalFile.open(QIODevice::ReadOnly))
+    {
+        return false;
+    }
+
+    QFileInfo pvalueFileInfo(pvalFilePath);
+    QString pvalueFileAbPath = pvalueFileInfo.absolutePath();
+    QString pvalueFileBaseName = pvalueFileInfo.baseName();
+    QString pvalueFileSuffix = pvalueFileInfo.suffix();
+    QString pvalueFileComSuffix = pvalueFileInfo.completeSuffix();
+
+    int snpIDIndex;
+    if ( pvalueFileComSuffix == "assoc.linear" || pvalueFileComSuffix == "assoc.logistic")
+    {   // plink
+        /* .assoc.linear
+         * .assoc.logistic:
+         *      CHR SNP BP A1 TEST NMISS OR STAT P
+         */
+        snpIDIndex = 1;
+    }
+
+    if (pvalueFileSuffix == "ps")
+    {   // Emmax output file.
+        /*.ps:
+         *      [SNP ID(CHR:BP)], [beta], [p-value] (header, don't exist in file)
+         *      chr0:39616  0.7571908167    0.2146455451
+         */
+        snpIDIndex = 0;
+    }
+
+    QTextStream pvalFileStream(&pvalFile);
+
+    while (!pvalFileStream.atEnd())
+    {
+        QString curLine = pvalFileStream.readLine();
+        QStringList curLineList = curLine.replace("NA", "-9").split(QRegExp("\\s+"), QString::SkipEmptyParts);
+        if (-log10f(curLineList.constLast().toFloat()) >= threshold)
+        {
+            snpID.append(curLineList[snpIDIndex]);
+        }
+    }
+    pvalFile.close();
+
+    return true;
+}
+
+bool Annovar::vcf2avinput(QString vcf, QStringList snpIDList, QString avinput)
+{
+    if (vcf.isNull() || avinput.isNull() || snpIDList.isEmpty())
+    {
+        return false;
+    }
+
+    QFile vcfFile(vcf);
+    QFile avinputFile(avinput);
+    if (!vcfFile.open(QIODevice::ReadOnly) ||
+        !avinputFile.open(QIODevice::WriteOnly))
+    {
+        return false;
+    }
+
+    // traverse map file, extract SNP.
+    QTextStream vcfFileStream(&vcfFile);
+    QTextStream avinputFileStream(&avinputFile);
+    vcfFileStream.readLine();   // Discard the header of vcf file.
+    while (!vcfFileStream.atEnd())
+    {
+        QString curLine = vcfFileStream.readLine();
+        if (curLine[0] == '#')
+        {
+            continue;
+        }
+        QStringList curLineList = curLine.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+        if (snpIDList.indexOf(curLineList[2]) != -1)
+        {
+            avinputFileStream << "chr"+curLineList[0] << "\t"
+                              << curLineList[1] << "\t" << curLineList[1] << "\t"
+                              << curLineList[3] << "\t" << curLineList[4] << endl;
+        }
+    }
+
+    return true;
+}
