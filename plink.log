@@ -1,12 +1,12 @@
-PLINK v1.90b6.16 64-bit (19 Feb 2020)
+PLINK v1.90b3.31 64-bit (3 Feb 2016)
 Options in effect:
-  --versio
+  --helpj
 
 Hostname: ubuntu-vm
-Working directory: /home/dengchao/Documents/code/H_G
-Start time: Wed Jun  3 20:58:35 2020
+Working directory: /home/dengchao/Documents/code/AquaGWAS
+Start time: Wed Oct  7 14:49:04 2020
 
-Error: Unrecognized flag ('--versio').
-For more information, try "plink --help <flag name>" or "plink --help | more".
+Error: Unrecognized flag ('--helpj').
+For more information, try 'plink --help [flag name]' or 'plink --help | more'.
 
-End time: Wed Jun  3 20:58:35 2020
+End time: Wed Oct  7 14:49:04 2020

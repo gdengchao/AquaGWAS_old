@@ -1,6 +1,7 @@
 #ifndef FUNCTIONALANNOTATOR_H
 #define FUNCTIONALANNOTATOR_H
 
+#include <QDebug>
 #include <QString>
 #include <QtMath>
 #include <QFile>
@@ -25,6 +26,9 @@ public:
                             QString const varFuncFilePath, QString const outFilePath);
     bool complFuncAnnoInfo(QString const exonicPosFilePath, QString nonExonicPosFilePath,
                            QString baseFilePath, QString outFilePath);
+    bool makeBaseFromGtfAndEnsembl(QString gtfFilePath, QString ensemblBase, QString out);
+    QSet<QString> getTransIDFromGtf(QString gtfFilePath);
+    QMap<QString, QString> getTransIDandProteinIDFromGtf(QString gtfFilePath);
 };
 
 #endif // FUNCTIONALANNOTATOR_H

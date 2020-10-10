@@ -2380,7 +2380,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 void MainWindow::on_gffFileBrowButton_clicked()
 {
     QFileDialog *fileDialog = new QFileDialog(this, "Open GFF file file", "",
-                                              "gff(*.gff *.gff2 *.gff3 *gff.txt);;all(*)");
+                                              "gff(*.gff *.gff2 *.gff3 *gff.txt);;gtf(*.gtf *.gtf3 *.gtf.txt);;all(*)");
     fileDialog->setViewMode(QFileDialog::Detail);
 
     QStringList fileNames;
@@ -2428,20 +2428,29 @@ void MainWindow::on_strucAnnoRunPushButton_clicked()
 
             // gffTogtf
             Annovar annovar;
-            if (!annovar.gffTogtf(gffFile, gtfFile))
+
+            if (gffFileSuffix.toLower()=="gff" || gffFileSuffix.toLower()=="gff3")
             {
-                throw -1;
+                if (!annovar.gffTogtf(gffFile, gtfFile))
+                {
+                    throw -1;
+                }
+                emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
+                                                "\nGff to gtf, \n");
+                QThread::msleep(10);
+                if (!runExTool(this->toolpath+"gffread", annovar.getParamList()))
+                {
+                    throw -1;
+                }
+                emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
+                                                "\nGff to gtf OK.\n");
+                QThread::msleep(10);
             }
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nGff to gtf, \n");
-            QThread::msleep(10);
-            if (!runExTool(this->toolpath+"gffread", annovar.getParamList()))
+            else
             {
-                throw -1;
+                gtfFile = gffFile;
             }
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nsGff to gtf OK.\n");
-            QThread::msleep(10);
+
             // gtfToGenePred
             QString refGeneFile = gffFileAbPath+"/"+gffFileBaseName+"_refGene.txt";
             if (!annovar.gtfToGenePred(gtfFile, refGeneFile))

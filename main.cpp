@@ -44,8 +44,24 @@ int main(int argc, char *argv[])
 //    QString str("A(B)");
 //    QStringList gene = str.split(QRegExp("\\(|\\)"), QString::SkipEmptyParts);
 
-    MainWindow w;
-    w.show();
+
+//    QRegExp regExp("transcript_id \"(.*)\"");
+
+//    QString item = "transcript_id \"ID\"";
+//    int pos = regExp.indexIn(item);
+
+//    QString tmp;
+
+//    if (pos >= 0)
+//        tmp = regExp.cap(1);
+
+    FuncAnnotator funcAnnotator;
+    funcAnnotator.makeBaseFromGtfAndEnsembl("/media/dengchao/data/data/Atlantic_salmon/Salmo_salar.ICSASG_v2.101.gtf",
+                                            "/media/dengchao/data/data/Atlantic_salmon/Salmo_salar.ICSASG_v2.101_anno_ensem.csv",
+                                            "/media/dengchao/data/data/Atlantic_salmon/Salmo_salar.ICSASG_v2.101_anno.out");
+
+//    MainWindow w;
+//    w.show();
 
     return a.exec();
 }

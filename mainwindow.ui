@@ -41,9 +41,9 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>210</x>
+      <x>180</x>
       <y>20</y>
-      <width>591</width>
+      <width>561</width>
       <height>511</height>
      </rect>
     </property>
@@ -60,7 +60,7 @@
      <enum>QTabWidget::Rounded</enum>
     </property>
     <property name="currentIndex">
-     <number>3</number>
+     <number>0</number>
     </property>
     <property name="iconSize">
      <size>
@@ -591,16 +591,6 @@ border-radius:5px;//这个是改变成圆角边框;
          <item row="3" column="0">
           <layout class="QHBoxLayout" name="horizontalLayout_6">
            <item>
-            <widget class="QFrame" name="frame_9">
-             <property name="frameShape">
-              <enum>QFrame::StyledPanel</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Raised</enum>
-             </property>
-            </widget>
-           </item>
-           <item>
             <widget class="QRadioButton" name="genoRadioButton">
              <property name="cursor">
               <cursorShape>PointingHandCursor</cursorShape>
@@ -736,6 +726,16 @@ border-radius:5px;//这个是改变成圆角边框;
              </property>
              <property name="text">
               <string>Exclude All</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QFrame" name="frame_9">
+             <property name="frameShape">
+              <enum>QFrame::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Raised</enum>
              </property>
             </widget>
            </item>
@@ -1845,7 +1845,7 @@ border-radius:5px;//这个是改变成圆角边框;
           </property>
           <property name="maximumSize">
            <size>
-            <width>34</width>
+            <width>80</width>
             <height>16777215</height>
            </size>
           </property>
@@ -1856,7 +1856,7 @@ border-radius:5px;//这个是改变成圆角边框;
            </font>
           </property>
           <property name="text">
-           <string>GFF </string>
+           <string>GFF/GTF </string>
           </property>
          </widget>
         </item>
