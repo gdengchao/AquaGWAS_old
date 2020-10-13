@@ -101,18 +101,22 @@ private slots:
     void graphViewer_clicked_slot();    // on_*** is implicit slot function
     // Structural annotation
     void on_gffFileBrowButton_clicked();
-    void on_structAnnoStepPushButton_clicked();
-    void on_strucAnnoRunPushButton_clicked();
+//    void on_structAnnoStepPushButton_clicked();
+//    void on_strucAnnoRunPushButton_clicked();
     void on_fastaFileBrowButton_clicked();
     void on_avinFileBrowButton_clicked();   
     // Functional annotation
-    void on_snpPosBrowButton_clicked();
+//    void on_snpPosBrowButton_clicked();
     void on_baseFileBrowButton_clicked();
-    void on_varFuncFileBrowButton_clicked();
-    void on_exVarFuncFileBrowButton_clicked();
-    void on_funcAnnoRunPushButton_clicked();
-    void on_funcAnnoStepPushButton_clicked();
+//    void on_varFuncFileBrowButton_clicked();
+//    void on_exVarFuncFileBrowButton_clicked();
+//    void on_funcAnnoRunPushButton_clicked();
+//    void on_funcAnnoStepPushButton_clicked();
+
     void on_annoPvalBrowButton_clicked();
+    void on_annotationRunButton_clicked();
+    void on_makeAvinputPushButton_clicked();
+
     // PCA
     void on_eigenvalFileBrowButton_clicked();
     void on_eigenvecFileBrowButton_clicked();
@@ -130,7 +134,6 @@ private slots:
     void on_resetWindowSig();
     // Set message box
     void on_setMsgBoxSig(const QString &title, const QString &text);
-
 
 private:
     Ui::MainWindow *ui;

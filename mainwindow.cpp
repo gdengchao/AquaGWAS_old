@@ -1214,9 +1214,9 @@ void MainWindow::resetWindow()
     ui->pcaPlotPushButton->setEnabled(true);
     ui->drawManPushButton->setEnabled(true);
     ui->drawQQPushButton->setEnabled(true);
-    ui->strucAnnoRunPushButton->setEnabled(true);
-    ui->funcAnnoRunPushButton->setEnabled(true);
-    ui->funcAnnoStepPushButton->setEnabled(true);
+//    ui->strucAnnoRunPushButton->setEnabled(true);
+//    ui->funcAnnoRunPushButton->setEnabled(true);
+//    ui->funcAnnoStepPushButton->setEnabled(true);
 }
 
 /**
@@ -2396,6 +2396,7 @@ void MainWindow::on_gffFileBrowButton_clicked()
     ui->gffFileLineEdit->setText(fileNames[0]);
 }
 
+/*
 void MainWindow::on_strucAnnoRunPushButton_clicked()
 {
     if (this->runningFlag)
@@ -2540,6 +2541,7 @@ void MainWindow::on_strucAnnoRunPushButton_clicked()
     this->resetWindow();
     this->runningFlag = false;
 }
+*/
 
 void MainWindow::on_fastaFileBrowButton_clicked()
 {
@@ -2583,6 +2585,7 @@ void MainWindow::on_avinFileBrowButton_clicked()
  * @brief MainWindow::on_snpPosBrowButton_clicked
  *      To open postion of SNP file.
  */
+/*
 void MainWindow::on_snpPosBrowButton_clicked()
 {
     QFileDialog *fileDialog = new QFileDialog(this, "Open SNP postion file", "",
@@ -2601,7 +2604,7 @@ void MainWindow::on_snpPosBrowButton_clicked()
     }
     ui->snpPosLineEdit->setText(fileNames[0]);
 }
-
+*/
 /**
  * @brief MainWindow::on_baseFileBrowButton_clicked
  *          To open database file of annotation.
@@ -2629,6 +2632,7 @@ void MainWindow::on_baseFileBrowButton_clicked()
  * @brief MainWindow::on_varFuncFileBrowButton_clicked
  *          To open .variant_function file.
  */
+/*
 void MainWindow::on_varFuncFileBrowButton_clicked()
 {
     QFileDialog *fileDialog = new QFileDialog(this, "Open variant function file", this->workDirectory->getOutputDirectory(),
@@ -2647,11 +2651,13 @@ void MainWindow::on_varFuncFileBrowButton_clicked()
     }
     ui->varFuncFileLineEdit->setText(fileNames[0]);
 }
+*/
 
 /**
  * @brief MainWindow::on_exVarFuncFileBrowButton_clicked
  *          To open .exonic_variant_function file.
  */
+/*
 void MainWindow::on_exVarFuncFileBrowButton_clicked()
 {
     QFileDialog *fileDialog = new QFileDialog(this, "Open exonic variant function file", "",
@@ -2670,12 +2676,14 @@ void MainWindow::on_exVarFuncFileBrowButton_clicked()
     }
     ui->exVarFuncFileLineEdit->setText(fileNames[0]);
 }
+*/
 
 /**
  * @brief MainWindow::on_funcAnnoRunPushButton_clicked
  *          To run functional anotation.
  *          Start from snpPosFile made in annoFuncStep or input.
  */
+/*
 void MainWindow::on_funcAnnoRunPushButton_clicked()
 {
     if (this->runningFlag)
@@ -2771,11 +2779,12 @@ void MainWindow::on_funcAnnoRunPushButton_clicked()
     qApp->processEvents();
     this->runningFlag = false;
 }
-
+*/
 /**
  * @brief MainWindow::on_funcAnnoStepPushButton_clicked
  *          Read map file and p-value file, filter SNP and exstract postion of SNP.
  */
+/*
 void MainWindow::on_funcAnnoStepPushButton_clicked()
 {
     if (this->runningFlag)
@@ -2863,7 +2872,8 @@ void MainWindow::on_funcAnnoStepPushButton_clicked()
     this->resetWindow();
     this->runningFlag = false;
 }
-
+*/
+/*
 void MainWindow::on_structAnnoStepPushButton_clicked()
 {
     if (this->runningFlag)
@@ -2959,7 +2969,7 @@ void MainWindow::on_structAnnoStepPushButton_clicked()
     this->resetWindow();
     this->runningFlag = false;
 }
-
+*/
 void MainWindow::on_annoPvalBrowButton_clicked()
 {
     QFileDialog *fileDialog = new QFileDialog(this, "Open GWAS result file", this->workDirectory->getOutputDirectory(),
@@ -3221,4 +3231,14 @@ void MainWindow::addFilesExecutePermission(QString directory)
     {
         QProcess::execute("chmod", QStringList()<< "+x" << directory+item);
     }
+}
+
+void MainWindow::on_annotationRunButton_clicked()
+{
+
+}
+
+void MainWindow::on_makeAvinputPushButton_clicked()
+{
+
 }
