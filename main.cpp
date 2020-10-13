@@ -55,13 +55,33 @@ int main(int argc, char *argv[])
 //    if (pos >= 0)
 //        tmp = regExp.cap(1);
 
-    FuncAnnotator funcAnnotator;
-    funcAnnotator.makeBaseFromGtfAndEnsembl("/media/dengchao/data/data/Atlantic_salmon/Salmo_salar.ICSASG_v2.101.gtf",
-                                            "/media/dengchao/data/data/Atlantic_salmon/Salmo_salar.ICSASG_v2.101_anno_ensem.csv",
-                                            "/media/dengchao/data/data/Atlantic_salmon/Salmo_salar.ICSASG_v2.101_anno.out");
 
-//    MainWindow w;
-//    w.show();
+
+//    FuncAnnotator funcAnnotator;
+//    funcAnnotator.getTransIDFromGff("/media/dengchao/data/data/Yesso_scallop/GCF_002113885.1_ASM211388v2_genomic.gff");
+//    funcAnnotator.makeBaseFromNcbi("/media/dengchao/data/data/Yesso_scallop/GCF_002113885.1_ASM211388v2_genomic.gtf",
+//                                         "/media/dengchao/data/data/Yesso_scallop/GCF_002113885.1_ASM211388v2_genomic_anno_ncbi.csv",
+//                                         "/media/dengchao/data/data/Yesso_scallop/GCF_002113885.1_ASM211388v2_genomic_anno_ncbi.out");
+//    QMap<QString, QString> map = funcAnnotator.getProteinIDandTransIDFromGff("/media/dengchao/data/data/Yesso_scallop/GCF_002113885.1_ASM211388v2_genomic.gff");
+
+//    QFile out("/media/dengchao/data/data/Yesso_scallop/GCF_002113885.1_ASM211388v2_genomic_anno_ncbi.out");
+//    out.open(QIODevice::WriteOnly);
+
+//    QTextStream stream(&out);
+//    for (auto it = map.begin(); it != map.end(); ++it)
+//    {
+//        stream << it.key() << "\t" << it.value() << endl;
+//    }
+
+//    QSet<QString> set = funcAnnotator.getTransIDFromGff("/media/dengchao/data/data/Yesso_scallop/GCF_002113885.1_ASM211388v2_genomic.gff");
+
+//    for (auto it : set)
+//    {
+//        stream << it << endl;
+//    }
+
+    MainWindow w;
+    w.show();
 
     return a.exec();
 }

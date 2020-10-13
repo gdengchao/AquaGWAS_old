@@ -26,9 +26,12 @@ public:
                             QString const varFuncFilePath, QString const outFilePath);
     bool complFuncAnnoInfo(QString const exonicPosFilePath, QString nonExonicPosFilePath,
                            QString baseFilePath, QString outFilePath);
-    bool makeBaseFromGtfAndEnsembl(QString gtfFilePath, QString ensemblBase, QString out);
     QSet<QString> getTransIDFromGtf(QString gtfFilePath);
-    QMap<QString, QString> getTransIDandProteinIDFromGtf(QString gtfFilePath);
+    QSet<QString> getTransIDFromGff(QString gffFilePath);
+    QMap<QString, QString> getProteinIDandTransIDFromGtf(QString gtfFilePath);
+    QMap<QString, QString> getProteinIDandTransIDFromGff(QString gffFilePath);
+    bool makeBaseFromEnsembl(QString gtfOrGffFilePath, QString ensemblBase, QString outFilePath);
+    bool makeBaseFromNcbi(QString gtfOrGffFilePath, QString ncbiBase, QString outFilePath);
 };
 
 #endif // FUNCTIONALANNOTATOR_H

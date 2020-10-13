@@ -495,33 +495,45 @@ bool FuncAnnotator::complFuncAnnoInfo(QString const exonicPosFilePath, QString n
 
 /**
  * @brief FuncAnnotator::makeBaseFromGtfAndNcbi
- * @param gtf
+ * @param gtfOrGffFilePath
  * @param ensemblBase
  *          Database file download from ensembl, seperate by comma.
  *          Include a column with header "Transcript stable ID".
  * @param out
  * @return
  */
-bool FuncAnnotator::makeBaseFromGtfAndEnsembl(QString gtfFilePath, QString ensemblBase, QString outFilePath)
+bool FuncAnnotator::makeBaseFromEnsembl(QString gtfOrGffFilePath, QString ensemblBase, QString outFilePath)
 {
-    if (gtfFilePath.isNull() || ensemblBase.isNull() || outFilePath.isNull())
+    if (gtfOrGffFilePath.isNull() || ensemblBase.isNull() || outFilePath.isNull())
     {
         return false;
     }
 
-    QFile gtfFile(gtfFilePath);
+    QFile gtfOrGffFile(gtfOrGffFilePath);
     QFile ensemblBaseFile(ensemblBase);
     QFile outFile(outFilePath);
-    if (!gtfFile.open(QIODevice::ReadOnly) ||
+    if (!gtfOrGffFile.open(QIODevice::ReadOnly) ||
         !ensemblBaseFile.open(QIODevice::ReadOnly) ||
         !outFile.open(QIODevice::WriteOnly))
     {
         return false;
     }
-    QTextStream gtfFileStream(&gtfFile);
+    QTextStream gtfOrGffFileStream(&gtfOrGffFile);
     QTextStream ensemblBaseFileStream(&ensemblBaseFile);
     QTextStream outFileStream(&outFile);
-    QSet<QString> transcriptID = this->getTransIDFromGtf(gtfFilePath);
+
+    QFileInfo fileInfo(gtfOrGffFile);
+    QString suffix = fileInfo.suffix();
+
+    QSet<QString> transcriptID;
+    if (suffix.toLower() == "gff" || suffix.toLower() == "gff3")
+    {
+        transcriptID = this->getTransIDFromGff(gtfOrGffFilePath);
+    }
+    else if (suffix.toLower() == "gtf" || suffix.toLower() == "gtf3")
+    {
+        transcriptID = this->getTransIDFromGtf(gtfOrGffFilePath);
+    }
 
     QStringList headerList = ensemblBaseFileStream.readLine().split(',');      // Read the header line
     int transIDIndex = headerList.indexOf("Transcript stable ID");
@@ -541,6 +553,75 @@ bool FuncAnnotator::makeBaseFromGtfAndEnsembl(QString gtfFilePath, QString ensem
         }
 
         outFileStream << curLineList[transIDIndex] << "\t" << curLineList[geneDescripIndex] << endl;
+    }
+
+    return true;
+}
+
+/**
+ * @brief makeBaseFromGtfAndNcbi
+ * @param gtfFilePath
+ * @param ncbiBase
+ *          Database file download from ncbi, seperate by comma.
+ *          Include a column with header "Protein stable ID".
+ * @param outFilePath   Two columns(Transcript_ID   Protein_ID)
+ * @return
+ */
+bool FuncAnnotator::makeBaseFromNcbi(QString gtfOrGffFilePath, QString ncbiBase, QString outFilePath)
+{
+    if (gtfOrGffFilePath.isNull() || ncbiBase.isNull() || outFilePath.isNull())
+    {
+        return false;
+    }
+
+    QFile gtfOrGffFile(gtfOrGffFilePath);
+    QFile ncbiBaseFile(ncbiBase);
+    QFile outFile(outFilePath);
+    if (!gtfOrGffFile.open(QIODevice::ReadOnly) ||
+        !ncbiBaseFile.open(QIODevice::ReadOnly) ||
+        !outFile.open(QIODevice::WriteOnly))
+    {
+        return false;
+    }
+    QTextStream gtfOrGffFileStream(&gtfOrGffFile);
+    QTextStream ncbiBaseFileStream(&ncbiBaseFile);
+    QTextStream outFileStream(&outFile);
+
+    QFileInfo fileInfo(gtfOrGffFile);
+    QString suffix = fileInfo.suffix();
+    QMap<QString, QString> proteinIDandTransIDMap;
+    if (suffix.toLower() == "gff" || suffix.toLower() == "gff3")
+    {
+        proteinIDandTransIDMap = this->getProteinIDandTransIDFromGff(gtfOrGffFilePath);
+    }
+    else if (suffix.toLower() == "gtf" || suffix.toLower() == "gtf3")
+    {
+        proteinIDandTransIDMap = this->getProteinIDandTransIDFromGtf(gtfOrGffFilePath);
+    }
+    proteinIDandTransIDMap = this->getProteinIDandTransIDFromGtf(gtfOrGffFilePath);
+
+    QStringList headerList = ncbiBaseFileStream.readLine().remove(0, 1).split(',');      // Read the header line
+    int proteinIDIndex = headerList.indexOf("Protein product");
+    int geneDescripIndex = headerList.indexOf("Protein Name");
+    if (proteinIDIndex < 0 || geneDescripIndex < 0)
+    {
+        return false;
+    }
+
+    while (!ncbiBaseFileStream.atEnd())
+    {
+        QStringList curLineList = ncbiBaseFileStream.readLine().split(',');
+
+        curLineList[proteinIDIndex].remove(0, 1);
+        curLineList[proteinIDIndex].remove(curLineList[proteinIDIndex].length(), 1);
+
+        if (proteinIDandTransIDMap.find(curLineList[proteinIDIndex]) == proteinIDandTransIDMap.end())
+        {
+            continue;
+        }
+        outFileStream << curLineList[proteinIDIndex]
+                      << proteinIDandTransIDMap[curLineList[proteinIDIndex]]
+                      << endl;
     }
 
     return true;
@@ -570,8 +651,6 @@ QSet<QString> FuncAnnotator::getTransIDFromGtf(QString gtfFilePath)
     }
     QTextStream gtfFileStream(&gtfFile);
 
-    QString tmp = gtfFileStream.readLine();
-  //  ncbiBaseFileStream.readLine();      // Read the header line and strip it.
     while (!gtfFileStream.atEnd())
     {
         QString curLine = gtfFileStream.readLine();
@@ -597,28 +676,76 @@ QSet<QString> FuncAnnotator::getTransIDFromGtf(QString gtfFilePath)
     return transIDSet;
 }
 
+/**
+ * @brief FuncAnnotator::getTransIDFromGff
+ * @param gffFilePath
+ *          The last column contains multiple attribute, seperate by ';',
+ *        each of the attribute is the form of (key="value").
+ *          transcript_id=ID, spell of "transcript_id" need to to be same.
+ * @return
+ */
+QSet<QString> FuncAnnotator::getTransIDFromGff(QString gffFilePath)
+{
+    QSet<QString> transIDSet;
+    if (gffFilePath.isNull())
+    {
+        return transIDSet;
+    }
+
+    QFile gffFile(gffFilePath);
+    if (!gffFile.open(QIODevice::ReadOnly))
+    {
+        qDebug() << gffFile.errorString();
+        return transIDSet;
+    }
+    QTextStream gffFileStream(&gffFile);
+
+    while (!gffFileStream.atEnd())
+    {
+        QString curLine = gffFileStream.readLine();
+        if (curLine[0] == '#')
+        {   // comment line begin with a symbol '#'
+            continue;   // Read next line.
+        }
+        QStringList curLineInfoList = curLine.split('\t').last().split(';');
+
+        QRegExp regExp("transcript_id=(.*)");
+        for (auto item : curLineInfoList)
+        {
+            int pos = regExp.indexIn(item);
+            if (pos < 0)
+            {
+                continue;
+            }
+            transIDSet.insert(regExp.cap(1));
+            break;  // Only one transcript_id need to be found.
+        }
+    }
+
+    return transIDSet;
+}
 
 /**
- * @brief FuncAnnotator::getTransIDFromGtf
+ * @brief FuncAnnotator::getProteinIDandTransIDFromGtf
  * @param gtfFilePath
  *          The last column contains multiple attribute, seperate by ';',
  *        each of the attribute is the form of (key "value").
  *          protein_id "ID", spell of "protein_id" need to to be same.
- * @return
+ * @return  proteinIDtransIDMap: key proteinID, value transcriptID.
  */
-QMap<QString, QString> getTransIDandProteinIDFromGtf(QString gtfFilePath)
+QMap<QString, QString> FuncAnnotator::getProteinIDandTransIDFromGtf(QString gtfFilePath)
 {
-    QMap<QString, QString> transIDproteinIDMap;
+    QMap<QString, QString> proteinIDtransIDMap;
     if (gtfFilePath.isNull())
     {
-        return transIDproteinIDMap;
+        return proteinIDtransIDMap;
     }
 
     QFile gtfFile(gtfFilePath);
     if (!gtfFile.open(QIODevice::ReadOnly))
     {
         qDebug() << gtfFile.errorString();
-        return transIDproteinIDMap;
+        return proteinIDtransIDMap;
     }
     QTextStream gtfFileStream(&gtfFile);
 
@@ -651,22 +778,20 @@ QMap<QString, QString> getTransIDandProteinIDFromGtf(QString gtfFilePath)
                 break;
             }
 
-            proteinIDPos = proteinID_regExp.indexIn(item);
-            if (proteinIDPos >= 0)
+            if (transcriptIDPos < 0)
             {
-                proteinID = proteinID_regExp.cap(1);
-                continue;
-            }
-            transcriptIDPos = transID_regExp.indexIn(item);
-            if (transcriptIDPos >= 0)
-            {
+                transcriptIDPos = transID_regExp.indexIn(item);
                 transID = transID_regExp.cap(1);
-                continue;
+            }
+            if (proteinIDPos < 0)
+            {
+                proteinIDPos = proteinID_regExp.indexIn(item);
+                proteinID = proteinID_regExp.cap(1);
             }
         }
         if (proteinIDPos >= 0 && transcriptIDPos >= 0)
         {   // Both have transcript_id and protein_id.
-            transIDproteinIDMap.insert(transID, proteinID);
+            proteinIDtransIDMap.insert(proteinID, transID);
         }
         // Clear flag.
         proteinIDPos = -1, transcriptIDPos = -1;
@@ -674,5 +799,82 @@ QMap<QString, QString> getTransIDandProteinIDFromGtf(QString gtfFilePath)
         proteinID.clear();
     }
 
-    return transIDproteinIDMap;
+    return proteinIDtransIDMap;
+}
+
+/**
+ * @brief FuncAnnotator::getProteinIDandTransIDFromGff
+ * @param gffFilePath
+ *          The last column contains multiple attribute, seperate by ';',
+ *        each of the attribute is the form of (key="value").
+ *          protein_id=ID, spell of "protein_id" need to to be same.
+ * @return  proteinIDtransIDMap: key proteinID, value transcriptID.
+ */
+QMap<QString, QString> FuncAnnotator::getProteinIDandTransIDFromGff(QString gffFilePath)
+{
+    QMap<QString, QString> proteinIDtransIDMap;
+    if (gffFilePath.isNull())
+    {
+        return proteinIDtransIDMap;
+    }
+
+    QFile gffFile(gffFilePath);
+    if (!gffFile.open(QIODevice::ReadOnly))
+    {
+        qDebug() << gffFile.errorString();
+        return proteinIDtransIDMap;
+    }
+    QTextStream gffFileStream(&gffFile);
+
+    while (!gffFileStream.atEnd())
+    {
+        QString curLine = gffFileStream.readLine();
+        if (curLine[0] == '#')
+        {   // comment line begin with a symbol '#'
+            continue;   // Read next line.
+        }
+        QStringList curLineInfoList = curLine.split('\t').last().split(';');
+
+        QRegExp proteinID_regExp("protein_id=(.*)");
+        QRegExp transID_regExp("transcript_id=(.*)");
+
+        // Identify the attribute lookup situation and temporarily store the ID
+        int proteinIDPos = -1, transcriptIDPos = -1;
+        QString proteinID, transID;
+
+        for (auto item : curLineInfoList)
+        {   // curLineInfoList: Each element has an attribute
+            // 	gene_id "ENSSSAG00000000039"
+            //  ...
+            //  transcript_id "ENSSSAT00000000039";
+            //  ...
+            //  protein_id "ENSSSAP00000000015";
+            //  ...
+            if (proteinIDPos >= 0 && transcriptIDPos >= 0)
+            {   // transcript_id and protein_id has been found.
+                break;
+            }
+
+            if (transcriptIDPos < 0)
+            {
+                transcriptIDPos = transID_regExp.indexIn(item);
+                transID = transID_regExp.cap(1);
+            }
+            if (proteinIDPos < 0)
+            {
+                proteinIDPos = proteinID_regExp.indexIn(item);
+                proteinID = proteinID_regExp.cap(1);
+            }
+        }
+        if (proteinIDPos >= 0 && transcriptIDPos >= 0)
+        {   // Both have transcript_id and protein_id.
+            proteinIDtransIDMap.insert(proteinID, transID);
+        }
+        // Clear flag.
+        proteinIDPos = -1, transcriptIDPos = -1;
+        transID.clear();
+        proteinID.clear();
+    }
+
+    return proteinIDtransIDMap;
 }
