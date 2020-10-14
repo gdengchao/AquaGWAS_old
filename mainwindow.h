@@ -107,7 +107,7 @@ private slots:
     void on_avinFileBrowButton_clicked();   
     // Functional annotation
 //    void on_snpPosBrowButton_clicked();
-    void on_baseFileBrowButton_clicked();
+    void on_funcAnnoRefFileBrowButton_clicked();
 //    void on_varFuncFileBrowButton_clicked();
 //    void on_exVarFuncFileBrowButton_clicked();
 //    void on_funcAnnoRunPushButton_clicked();
@@ -115,7 +115,7 @@ private slots:
 
     void on_annoPvalBrowButton_clicked();
     void on_annotationRunButton_clicked();
-    void on_makeAvinputPushButton_clicked();
+    void on_annoStepPushButton_clicked();
 
     // PCA
     void on_eigenvalFileBrowButton_clicked();
@@ -134,6 +134,8 @@ private slots:
     void on_resetWindowSig();
     // Set message box
     void on_setMsgBoxSig(const QString &title, const QString &text);
+
+    void on_snpPosFileFileBrowButton_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -187,5 +189,8 @@ private:
     // Checkout file existence.
     bool checkoutExistence(QString filePath);
     void addFilesExecutePermission(QString dir);
+    void structuralAnnotation(QString avinputFilePath, QString gffOrGtfFilePath, QString refFastaFilePath);
+    void functionalAnnotation(QString snpPosFilePath, QString varFuncFilePath,
+                              QString exVarFuncFilePath, QString funcAnnoBase);
 };
 #endif // MAINWINDOW_H

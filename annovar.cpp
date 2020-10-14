@@ -38,6 +38,13 @@ bool Annovar::gtfToGenePred(QString gtfFile, QString outFile)
     return true;
 }
 
+/**
+ * @brief Annovar::retrieveSeqFromFasta
+ * @param refGeneFile
+ * @param seqFile       .fasta file.
+ * @param outFile
+ * @return
+ */
 bool Annovar::retrieveSeqFromFasta(QString refGeneFile, QString seqFile, QString outFile)
 {
     if (refGeneFile.isNull() || seqFile.isNull() || outFile.isNull())

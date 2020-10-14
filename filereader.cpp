@@ -132,3 +132,67 @@ bool FileReader::transformCovariateFile(QString srcCovar, QString desCovar)
 
     return true;
 }
+
+/**
+ * @brief FileReader::makeAvinputAndSnpposFile
+ * @param vcfFilePath           Extrac position of SNP and save to outFile.(reserve p-value) and make avinput file.
+ * @param pvalFilePath          pvalFilePath  p-value file (Two column: SNP_ID P-VAL)
+ * @param avinputFilePath
+ * @param snpPosFilePath        snpPosFilePath   output file(SNP_ID, p-value, CHR, BP)
+ * @return
+ */
+bool FileReader::makeAvinputAndSnpposFile(QString vcfFilePath, QString pvalFilePath,
+                              QString avinputFilePath, QString snpPosFilePath)
+{
+    if (vcfFilePath.isNull() || pvalFilePath.isNull() || avinputFilePath.isNull() || snpPosFilePath.isNull())
+    {
+        return false;
+    }
+
+    // Get the SNP which need to extract and save to snpID(QSet).
+    QFile pvalFile(pvalFilePath);
+    if (!pvalFile.open(QIODevice::ReadOnly))
+    {
+        return false;
+    }
+    QTextStream pvalFileStream(&pvalFile);
+    QMap<QString, QString> snpIDMap;    // SNPs need to extract.
+    while (!pvalFileStream.atEnd())
+    {
+        QStringList curLine = pvalFileStream.readLine().split(QRegExp("\\s+"), QString::SkipEmptyParts);
+        snpIDMap.insert(curLine[0], curLine[0]+"\t"+curLine[1]);   // cut the SNP_ID and p-value
+    }
+
+    QFile vcfFile(vcfFilePath);
+    QFile avinputFile(avinputFilePath);
+    QFile snpPosFile(snpPosFilePath);
+    if (!vcfFile.open(QIODevice::ReadOnly) ||
+        !avinputFile.open(QIODevice::WriteOnly) ||
+        !snpPosFile.open(QIODevice::WriteOnly))
+    {
+        return false;
+    }
+
+    // traverse map file, extract SNP.
+    QTextStream vcfFileStream(&vcfFile);
+    QTextStream avinputFileStream(&avinputFile);
+    QTextStream snpPosFileStream(&snpPosFile);
+    while (!vcfFile.atEnd())
+    {
+        QString curLine = vcfFileStream.readLine();
+        if (curLine[0] == '#')
+        {
+            continue;
+        }
+        QStringList curLineList = curLine.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+        if (snpIDMap.find(curLineList[2]) != snpIDMap.end())
+        {
+            snpPosFileStream << snpIDMap[curLineList[2]] << "\tchr" << curLineList[0] << "\t" << curLineList[1] << endl;
+            avinputFileStream << "chr"+curLineList[0] << "\t"
+                              << curLineList[1] << "\t" << curLineList[1] << "\t"
+                              << curLineList[3] << "\t" << curLineList[4] << endl;
+        }
+    }
+
+    return true;
+}
