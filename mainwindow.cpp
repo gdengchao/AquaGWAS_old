@@ -780,6 +780,7 @@ bool MainWindow::callGemmaGwas(QString phenotype, QString genotype, QString map,
         if (checkoutExistence(correctedFile))
         {
             emit setLineEditTextSig(ui->qqmanGwasResultLineEdit, correctedFile);
+            emit setLineEditTextSig(ui->annoPvalLineEdit, correctedFile);
             QThread::msleep(10);
         }
     }
@@ -793,6 +794,8 @@ bool MainWindow::callGemmaGwas(QString phenotype, QString genotype, QString map,
         }
 
         emit setLineEditTextSig(ui->qqmanGwasResultLineEdit, objDir.path()
+                                +"/"+name+"_"+pheFileBaseName+".assoc.txt");
+        emit setLineEditTextSig(ui->annoPvalLineEdit, objDir.path()
                                 +"/"+name+"_"+pheFileBaseName+".assoc.txt");
         QThread::msleep(10);
     }
@@ -992,6 +995,7 @@ bool MainWindow::callEmmaxGwas(QString phenotype, QString genotype, QString map,
         {
             //            ui->qqmanGwasResultLineEdit->setText(correctedFile);
             emit setLineEditTextSig(ui->qqmanGwasResultLineEdit, correctedFile);
+            emit setLineEditTextSig(ui->annoPvalLineEdit, correctedFile);
             QThread::msleep(10);
         }
     }
@@ -1004,6 +1008,7 @@ bool MainWindow::callEmmaxGwas(QString phenotype, QString genotype, QString map,
         }
         //            ui->qqmanGwasResultLineEdit->setText(out+"/"+name+"_"+pheFileBaseName+".ps");
         emit setLineEditTextSig(ui->qqmanGwasResultLineEdit, out+"/"+name+"_"+pheFileBaseName+".ps");
+        emit setLineEditTextSig(ui->annoPvalLineEdit, out+"/"+name+"_"+pheFileBaseName+".ps");
         QThread::msleep(10);
     }
 
@@ -1129,6 +1134,8 @@ bool MainWindow::callPlinkGwas(QString phenotype, QString genotype, QString map,
     {
         //        ui->qqmanGwasResultLineEdit->setText(out+"/"+name+"_"+pheFileBaseName+".assoc."+model.toLower());
         emit setLineEditTextSig(ui->qqmanGwasResultLineEdit,
+                                out+"/"+name+"_"+pheFileBaseName+".assoc."+model.toLower());
+        emit setLineEditTextSig(ui->annoPvalLineEdit,
                                 out+"/"+name+"_"+pheFileBaseName+".assoc."+model.toLower());
     }
 
@@ -2379,10 +2386,10 @@ void MainWindow::closeEvent(QCloseEvent *event)
     }
 }
 
-void MainWindow::on_gffFileBrowButton_clicked()
+void MainWindow::on_refGeneFileBrowButton_clicked()
 {
-    QFileDialog *fileDialog = new QFileDialog(this, "Open GFF or GTF file", "",
-                                              "gff(*.gff *.gff2 *.gff3 *gff.txt);;gtf(*.gtf *.gtf3 *.gtf.txt);;all(*)");
+    QFileDialog *fileDialog = new QFileDialog(this, "Open reference gene file", "",
+                                              "gff(*.gff *.gff2 *.gff3 *gff.txt);;gtf(*.gtf *.gtf3 *.gtf.txt);;refGene(*refGene.txt);;all(*)");
     fileDialog->setViewMode(QFileDialog::Detail);
 
     QStringList fileNames;
@@ -2395,159 +2402,12 @@ void MainWindow::on_gffFileBrowButton_clicked()
     {
         return;
     }
-    ui->gffFileLineEdit->setText(fileNames[0]);
+    ui->refGeneFileLineEdit->setText(fileNames[0]);
 }
 
-/*
-void MainWindow::on_strucAnnoRunPushButton_clicked()
+void MainWindow::on_refSeqFileBrowButton_clicked()
 {
-    if (this->runningFlag)
-    {
-        QMessageBox::information(nullptr, "Error", "A project is running now.");
-        return;
-    }
-    this->runningFlag = true;
-    QString gffFile = ui->gffFileLineEdit->text();
-    QString fastaFile = ui->fastaFileLineEdit->text();
-    if (gffFile.isNull() || gffFile.isEmpty() || fastaFile.isNull() || fastaFile.isEmpty())
-    {
-        return;
-    }
-
-    try
-    {
-        QFuture<void> fu = QtConcurrent::run([&]()
-        {
-            ui->strucAnnoRunPushButton->setEnabled(false);
-            qApp->processEvents();
-
-            QFileInfo gffFileInfo(gffFile);
-            QString gffFileBaseName = gffFileInfo.baseName();
-            QString gffFileCompBaseName = gffFileInfo.completeBaseName();
-            QString gffFileSuffix = gffFileInfo.suffix();
-            QString gffFileAbPath = gffFileInfo.absolutePath();
-
-            QString gtfFile =gffFileAbPath+"/"+gffFileCompBaseName+".gtf";
-
-            // gffTogtf
-            Annovar annovar;
-
-            if (gffFileSuffix.toLower()=="gff" || gffFileSuffix.toLower()=="gff3")
-            {
-                if (!annovar.gffTogtf(gffFile, gtfFile))
-                {
-                    throw -1;
-                }
-                emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                                "\nGff to gtf, \n");
-                QThread::msleep(10);
-                if (!runExTool(this->toolpath+"gffread", annovar.getParamList()))
-                {
-                    throw -1;
-                }
-                emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                                "\nGff to gtf OK.\n");
-                QThread::msleep(10);
-            }
-            else
-            {
-                gtfFile = gffFile;
-            }
-
-            // gtfToGenePred
-            QString refGeneFile = gffFileAbPath+"/"+gffFileBaseName+"_refGene.txt";
-            if (!annovar.gtfToGenePred(gtfFile, refGeneFile))
-            {
-                throw -1;
-            }
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nGtf to genePred, \n");
-            QThread::msleep(10);
-            if (!runExTool(this->toolpath+"gtfToGenePred", annovar.getParamList()))
-            {
-                throw -1;
-            }
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nGtf to genePred OK.\n");
-            QThread::msleep(10);
-            // retrieve_seq_from_fasta
-            QString outFastaFile = gffFileAbPath + "/" + gffFileBaseName + "_refGeneMrna.fa";
-            if (!annovar.retrieveSeqFromFasta(refGeneFile, fastaFile, outFastaFile))
-            {
-                throw -1;
-            }
-
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nRetrieve seq from fasta,\n");
-            QThread::msleep(10);
-
-            if (!runExTool(this->scriptpath+"annovar/retrieve_seq_from_fasta",
-                           annovar.getParamList()))
-            {
-                throw -1;
-            }
-
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nRetrieve seq from fasta OK.\n");
-            QThread::msleep(10);
-            // annotation
-            QString out = this->workDirectory->getOutputDirectory();
-            QString name = this->workDirectory->getProjectName();
-            QString outFile = out + "/" + name + "_" + gffFileBaseName;
-            QString avinput = ui->avinFileLineEdit->text();
-            QString refGeneDir = gffFileAbPath;
-            QString refGenePrefix = gffFileBaseName;
-
-            // table_annovar
-            //        if (!annovar.tableAnnovar(avinput, refGeneDir, refGenePrefix, outFile))
-            //        {
-            //            throw -1;
-            //        }
-            //        this->process->start(this->scriptpath+"annovar/table_annovar", annovar.getParamList());
-
-            // annotate_variation
-            if (!annovar.annotateVariation(avinput, refGeneDir, refGenePrefix, outFile))
-            {
-                throw -1;
-            }
-
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nAnnotation,\n");
-            QThread::msleep(10);
-
-            if (!runExTool(this->scriptpath+"annovar/annotate_variation",
-                           annovar.getParamList()))
-            {
-                throw -1;
-            }
-
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nStructural annotation OK.\n");
-            QThread::msleep(10);
-            if (runningFlag && checkoutExistence(outFile+".variant_functino"))
-            {
-                //                ui->varFuncFileLineEdit->setText(outFile+".variant_functino");
-                emit setLineEditTextSig(ui->varFuncFileLineEdit, outFile+".variant_functino");
-            }
-        });
-        while(!fu.isFinished())
-        {
-            qApp->processEvents(QEventLoop::AllEvents, 200);
-        }
-
-    } catch(...)
-    {
-        this->resetWindow();
-    }
-
-    this->resetWindow();
-    this->runningFlag = false;
-}
-*/
-
-void MainWindow::on_fastaFileBrowButton_clicked()
-{
-    QFileDialog *fileDialog = new QFileDialog(this, "Open gene reference fasta file", "",
+    QFileDialog *fileDialog = new QFileDialog(this, "Open reference sequence file", "",
                                               "fasta(*.fa *.Fa *.fasta *.Fasta);;all(*)");
     fileDialog->setViewMode(QFileDialog::Detail);
 
@@ -2561,7 +2421,7 @@ void MainWindow::on_fastaFileBrowButton_clicked()
     {
         return;
     }
-    ui->fastaFileLineEdit->setText(fileNames[0]);
+    ui->refSeqFileLineEdit->setText(fileNames[0]);
 }
 
 void MainWindow::on_avinFileBrowButton_clicked()
@@ -2587,11 +2447,10 @@ void MainWindow::on_avinFileBrowButton_clicked()
  * @brief MainWindow::on_snpPosBrowButton_clicked
  *      To open postion of SNP file.
  */
-/*
-void MainWindow::on_snpPosBrowButton_clicked()
+void MainWindow::on_snpPosFileFileBrowButton_clicked()
 {
-    QFileDialog *fileDialog = new QFileDialog(this, "Open SNP postion file", "",
-                                              "all(*)");
+    QFileDialog *fileDialog = new QFileDialog(this, "Open SNP position file", "",
+                                              "snpPos(all(*)");
     fileDialog->setViewMode(QFileDialog::Detail);
 
     QStringList fileNames;
@@ -2604,9 +2463,9 @@ void MainWindow::on_snpPosBrowButton_clicked()
     {
         return;
     }
-    ui->snpPosLineEdit->setText(fileNames[0]);
+    ui->snpPosFileLineEdit->setText(fileNames[0]);
 }
-*/
+
 /**
  * @brief MainWindow::on_baseFileBrowButton_clicked
  *          To open functional annotaion reference file.
@@ -2614,7 +2473,7 @@ void MainWindow::on_snpPosBrowButton_clicked()
 void MainWindow::on_funcAnnoRefFileBrowButton_clicked()
 {
     QFileDialog *fileDialog = new QFileDialog(this, "Open functional annotation reference file", "",
-                                              "funcAnnoRef(all(*)");
+                                              "funcAnnoRef(funcanno(*.funcanno *ncbi.csv *ensem.csv);;all(*)");
     fileDialog->setViewMode(QFileDialog::Detail);
 
     QStringList fileNames;
@@ -2630,348 +2489,6 @@ void MainWindow::on_funcAnnoRefFileBrowButton_clicked()
     ui->funcAnnoRefFileLineEdit->setText(fileNames[0]);
 }
 
-/**
- * @brief MainWindow::on_varFuncFileBrowButton_clicked
- *          To open .variant_function file.
- */
-/*
-void MainWindow::on_varFuncFileBrowButton_clicked()
-{
-    QFileDialog *fileDialog = new QFileDialog(this, "Open variant function file", this->workDirectory->getOutputDirectory(),
-                                              "var_func(*.variant_function);;(all(*)");
-    fileDialog->setViewMode(QFileDialog::Detail);
-
-    QStringList fileNames;
-    if (fileDialog->exec())
-    {
-        fileNames = fileDialog->selectedFiles();
-    }
-    delete fileDialog;
-    if (fileNames.isEmpty())    // If didn't choose any file.
-    {
-        return;
-    }
-    ui->varFuncFileLineEdit->setText(fileNames[0]);
-}
-*/
-
-/**
- * @brief MainWindow::on_exVarFuncFileBrowButton_clicked
- *          To open .exonic_variant_function file.
- */
-/*
-void MainWindow::on_exVarFuncFileBrowButton_clicked()
-{
-    QFileDialog *fileDialog = new QFileDialog(this, "Open exonic variant function file", "",
-                                              "ex_var_func(*.exonic_variant_function);;(all(*)");
-    fileDialog->setViewMode(QFileDialog::Detail);
-
-    QStringList fileNames;
-    if (fileDialog->exec())
-    {
-        fileNames = fileDialog->selectedFiles();
-    }
-    delete fileDialog;
-    if (fileNames.isEmpty())    // If didn't choose any file.
-    {
-        return;
-    }
-    ui->exVarFuncFileLineEdit->setText(fileNames[0]);
-}
-*/
-
-/**
- * @brief MainWindow::on_funcAnnoRunPushButton_clicked
- *          To run functional anotation.
- *          Start from snpPosFile made in annoFuncStep or input.
- */
-/*
-void MainWindow::on_funcAnnoRunPushButton_clicked()
-{
-    if (this->runningFlag)
-    {
-        QMessageBox::information(nullptr, "Error", "A project is running now.");
-        return;
-    }
-    this->runningFlag = true;
-    ui->funcAnnoRunPushButton->setEnabled(false);
-    qApp->processEvents();
-
-    try {
-        QString snpPosFile = ui->snpPosLineEdit->text();            // SNP position file: SNP P_VAL CHR BP
-        QString baseFile = ui->baseFileLineEdit->text();            // data base file
-        QString exVarFuncFile = ui->exVarFuncFileLineEdit->text();  // .exonic_variant_function
-        QString varFuncFile = ui->varFuncFileLineEdit->text();      // .variant_function
-        QString out = this->workDirectory->getOutputDirectory();
-        QString name = this->workDirectory->getProjectName();
-
-        if (snpPosFile.isEmpty())
-        {
-            QMessageBox::information(nullptr, "Error", "A position of SNP file is necessary.");
-            throw -1;
-        }
-        if (baseFile.isEmpty())
-        {
-            QMessageBox::information(nullptr, "Error", "A annotation base file is necessary.");
-            throw -1;
-        }
-        if (varFuncFile.isEmpty())
-        {
-            QMessageBox::information(nullptr, "Error", "A .variant_function file is necessary.");
-            throw -1;
-        }
-        if (exVarFuncFile.isEmpty())
-        {
-            QMessageBox::information(nullptr, "Error", "A .exonic_variant_function file is necessary.");
-            throw -1;
-        }
-
-        QFileInfo snpPosFileInfo(snpPosFile);
-        QString snpPosFileAbPath = snpPosFileInfo.absolutePath();
-        QString snpPosFileBaseName = snpPosFileInfo.baseName();
-
-        QString exonicPosFile = snpPosFileAbPath + "/exonic_pos";
-        QString nonExonicPosFile = snpPosFileAbPath + "/non_exonic_pos";
-        QString funcAnnoResult = out + "/" + name +"_func_anno";
-        FuncAnnotator funcAnnotator;
-
-        QFuture<void> fu = QtConcurrent::run(QThreadPool::globalInstance(), [&]()
-        {   // Run functional annotation in another thread;
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nComplete exonic SNP infomation,\n");
-            QThread::msleep(10);
-            if (!funcAnnotator.complExoSnpInfo(snpPosFile, exVarFuncFile, exonicPosFile))
-            {
-                throw -1;
-            }
-
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nOK\n\n" +
-                                            QDateTime::currentDateTime().toString() +
-                                            "\nComplete non-exonic SNP infomation,\n");
-            QThread::msleep(10);
-            if (!funcAnnotator.complNonExoSnpInfo(exonicPosFile, snpPosFile, varFuncFile, nonExonicPosFile))
-            {
-                throw -1;
-            }
-
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nComplete functional annotation infomation,\n");
-            QThread::msleep(10);
-            if (!funcAnnotator.complFuncAnnoInfo(exonicPosFile, nonExonicPosFile, baseFile, funcAnnoResult))
-            {
-                throw -1;
-            }
-
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nFunctional annotation OK\n"+
-                                            "\n" + funcAnnoResult + "\n");
-            QThread::msleep(10);
-        });
-        while (!fu.isFinished())
-        {
-            qApp->processEvents(QEventLoop::ExcludeUserInputEvents, 200);
-            QThread::msleep(10);
-        }
-    } catch (...) {
-        this->resetWindow();
-    }
-
-    ui->funcAnnoRunPushButton->setEnabled(true);
-    qApp->processEvents();
-    this->runningFlag = false;
-}
-*/
-/**
- * @brief MainWindow::on_funcAnnoStepPushButton_clicked
- *          Read map file and p-value file, filter SNP and exstract postion of SNP.
- */
-/*
-void MainWindow::on_funcAnnoStepPushButton_clicked()
-{
-    if (this->runningFlag)
-    {
-        QMessageBox::information(nullptr, "Error", "A project is running now.");
-        return;
-    }
-    this->runningFlag = true;
-    ui->funcAnnoStepPushButton->setEnabled(false);
-    qApp->processEvents();
-
-    QString mapFile = this->fileReader->getMapFile();
-    try {
-        if (mapFile.isNull() || mapFile.split(".").back() != "map")
-        {
-            QMessageBox::information(nullptr, "Error", "A .map file is necessary.");
-            throw -1;
-        }
-
-        QString pvalFile = ui->annoPvalLineEdit->text();    // p-value file(the first column is SNP_ID and the last column is p-value)
-        if (pvalFile.isNull() || pvalFile.isEmpty())
-        {
-            QMessageBox::information(nullptr, "Error", "A p-value file is necessary.");
-            throw -1;
-        }
-
-        QFileInfo pvalFileInfo(pvalFile);
-        QString pvalFileAbPath = pvalFileInfo.absolutePath();
-        QString pvalFileBaseName = pvalFileInfo.baseName();
-
-        QString thBase = ui->annoThBaseLineEdit->text();    // Threshold base number.
-        QString thExpo = ui->annoThExpoLineEdit->text();    // Threshold exponent.
-
-        if (thBase.isEmpty() || thExpo.isEmpty())
-        {
-            QMessageBox::information(nullptr, "Error", "Please set the threshold.");
-            throw -1;
-        }
-
-        QString sigSnpFile = pvalFileAbPath + "/" + pvalFileBaseName + "_sig";   // to save SNP after filter.
-        QString sigSnpPosFile = sigSnpFile + "_pos";        // to save extracted position of SNP after filter.
-
-        FuncAnnotator funcAnnotator;
-        QFuture<void> fu = QtConcurrent::run(QThreadPool::globalInstance(), [&]()
-        {
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nFilter SNP below threshold,\n");
-            QThread::msleep(10);
-            if (!funcAnnotator.filterSNP(pvalFile, thBase, thExpo, sigSnpFile))
-            {
-                throw -1;
-            }
-
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nFilter SNP below threshold OK\n");
-            QThread::msleep(10);
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nExtract position of SNP,\n");
-            QThread::msleep(10);
-            if (!funcAnnotator.extractPos(sigSnpFile, mapFile, sigSnpPosFile))
-            {
-                throw -1;
-            }
-
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nExtract position of SNP OK\n");
-            QThread::msleep(10);
-            if (runningFlag && checkoutExistence(sigSnpFile))
-            {
-                //                ui->snpPosLineEdit->setText(sigSnpPosFile);
-                emit setLineEditTextSig(ui->snpPosLineEdit, sigSnpPosFile);
-                QThread::msleep(10);
-            }
-        });
-        while (!fu.isFinished())
-        {
-            qApp->processEvents(QEventLoop::ExcludeUserInputEvents, 200);
-        }
-    } catch (...) {
-        this->resetWindow();
-    }
-
-    ui->funcAnnoRunPushButton->setEnabled(true);
-    qApp->processEvents();
-    this->resetWindow();
-    this->runningFlag = false;
-}
-*/
-/*
-void MainWindow::on_structAnnoStepPushButton_clicked()
-{
-    if (this->runningFlag)
-    {
-        QMessageBox::information(nullptr, "Error", "A project is running now.");
-        return;
-    }
-    this->runningFlag = true;
-    ui->structAnnoStepPushButton->setEnabled(false);
-    qApp->processEvents();
-
-    QString vcfFile = this->fileReader->getGenotypeFile();
-
-    QFileInfo vcfFileInfo(vcfFile);
-    QString vcfFileAbPath = vcfFileInfo.absolutePath();
-    QString vcfFileBaseName = vcfFileInfo.baseName();
-
-    QString avinput = vcfFileAbPath + "/" + vcfFileBaseName + ".avinput";
-
-
-    try {
-//        if (vcfFile.isNull() || !isVcfFile(vcfFile))
-//        {
-//            QMessageBox::information(nullptr, "Error", "A .vcf file is necessary.");
-//            throw -1;
-//        }
-
-        QString pvalFile = ui->annoPvalLineEdit->text();    // p-value file(the first column is SNP_ID and the last column is p-value)
-        if (pvalFile.isNull() || pvalFile.isEmpty())
-        {
-            QMessageBox::information(nullptr, "Error", "A p-value file is necessary.");
-            throw -1;
-        }
-
-        QFileInfo pvalFileInfo(pvalFile);
-        QString pvalFileAbPath = pvalFileInfo.absolutePath();
-        QString pvalFileBaseName = pvalFileInfo.baseName();
-
-        QString thBase = ui->annoThBaseLineEdit->text();    // Threshold base number.
-        QString thExpo = ui->annoThExpoLineEdit->text();    // Threshold exponent.
-
-        if (thBase.isEmpty() || thExpo.isEmpty())
-        {
-            QMessageBox::information(nullptr, "Error", "Please set the threshold.");
-            throw -1;
-        }
-
-        QString sigSnpFile = pvalFileAbPath + "/" + pvalFileBaseName + "_sig";   // to save SNP after filter.
-        QFuture<void> fu = QtConcurrent::run(QThreadPool::globalInstance(), [&]()
-        {
-            QStringList snpIDList;
-            Annovar annovar;
-
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nFilter SNP below threshold,\n");
-            QThread::msleep(10);
-            if (!annovar.filterSNP(pvalFile, thBase, thExpo, snpIDList))
-            {
-                throw -1;
-            }
-
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nFilter SNP below threshold OK\n");
-            QThread::msleep(10);
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nMake .avinput,\n");
-            QThread::msleep(10);
-            if (!annovar.vcf2avinput(vcfFile, snpIDList, avinput))
-            {
-                throw -1;
-            }
-
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nMake .avinput OK\n");
-
-            if (runningFlag && checkoutExistence(sigSnpFile))
-            {
-                //                ui->snpPosLineEdit->setText(sigSnpPosFile);
-                emit setLineEditTextSig(ui->avinFileLineEdit, avinput);
-                QThread::msleep(10);
-            }
-        });
-        while (!fu.isFinished())
-        {
-            qApp->processEvents(QEventLoop::ExcludeUserInputEvents, 200);
-        }
-    } catch (...) {
-        this->resetWindow();
-    }
-
-    ui->structAnnoStepPushButton->setEnabled(true);
-    qApp->processEvents();
-    this->resetWindow();
-    this->runningFlag = false;
-}
-*/
 void MainWindow::on_annoPvalBrowButton_clicked()
 {
     QFileDialog *fileDialog = new QFileDialog(this, "Open GWAS result file", this->workDirectory->getOutputDirectory(),
@@ -3147,11 +2664,11 @@ bool MainWindow::runExTool(QString tool, QStringList param)
     proc->waitForFinished(-1);
 
     bool ret = true;
-    //    if (proc->exitCode() != Process::NormalExit)
-    //    {
-    //        emit runningMsgWidgetAppendText(proc->errorString());
-    //        ret = false;
-    //    }
+//    if (proc->exitCode() != Process::NormalExit)
+//    {
+//        emit runningMsgWidgetAppendText(proc->errorString());
+//        ret = false;
+//    }
     proc->close();
     delete proc;
     proc = nullptr;
@@ -3235,9 +2752,9 @@ void MainWindow::addFilesExecutePermission(QString directory)
     }
 }
 
-void MainWindow::structuralAnnotation(QString avinputFilePath, QString gffFilePath, QString refFastaFilePath)
+void MainWindow::structuralAnnotation(QString avinputFilePath, QString refGeneFilePath, QString refSeqFilePath)
 {
-    if (avinputFilePath.isNull() || gffFilePath.isNull() || refFastaFilePath.isNull())
+    if (avinputFilePath.isNull() || refGeneFilePath.isNull() || refSeqFilePath.isNull())
     {
         return;
     }
@@ -3246,94 +2763,104 @@ void MainWindow::structuralAnnotation(QString avinputFilePath, QString gffFilePa
         QString varFuncFile, exonicVarFuncFile;     // Structural annotation result file
         QFuture<void> fu = QtConcurrent::run([&]
         {
-            QFileInfo gffFileInfo(gffFilePath);
-            QString gffFileBaseName = gffFileInfo.baseName();
-            QString gffFileCompBaseName = gffFileInfo.completeBaseName();
-            QString gffFileSuffix = gffFileInfo.suffix();
-            QString gffFileAbPath = gffFileInfo.absolutePath();
+            QFileInfo refGeneFileInfo(refGeneFilePath);
+            QString refGeneFileBaseName = refGeneFileInfo.baseName();
+            QString refGeneFileCompBaseName = refGeneFileInfo.completeBaseName();
+            QString refGeneFileSuffix = refGeneFileInfo.suffix();
+            QString refGeneFileAbPath = refGeneFileInfo.absolutePath();
 
-            QString gtfFilePath =gffFileAbPath+"/"+gffFileCompBaseName+".gtf";
+            QString gtfFilePath = refGeneFileAbPath+"/"+refGeneFileCompBaseName+".gtf";
 
             // gffTogtf
             Annovar annovar;
 
-            if (gffFileSuffix.toLower()=="gff" || gffFileSuffix.toLower()=="gff3")
-            {
-                if (!annovar.gffTogtf(gffFilePath, gtfFilePath))
-                {
-                    throw -1;
-                }
-                emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                                "\nGff to gtf, \n");
-                QThread::msleep(10);
-                if (!runExTool(this->toolpath+"gffread", annovar.getParamList()))
-                {
-                    throw -1;
-                }
-                emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                                "\nGff to gtf OK.\n");
-                QThread::msleep(10);
-            }
-            else
-            {
-                gtfFilePath = gffFilePath;
-            }
-
-            // gtfToGenePred
-            QString refGeneFile = gffFileAbPath+"/"+gffFileBaseName+"_refGene.txt";
-            if (!annovar.gtfToGenePred(gtfFilePath, refGeneFile))
-            {
-                throw -1;
-            }
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nGtf to genePred, \n");
-            QThread::msleep(10);
-            if (!runExTool(this->toolpath+"gtfToGenePred", annovar.getParamList()))
-            {
-                throw -1;
-            }
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nGtf to genePred OK.\n");
-            QThread::msleep(10);
-            // retrieve_seq_from_fasta
-            QString outFastaFile = gffFileAbPath + "/" + gffFileBaseName + "_refGeneMrna.fa";
-            if (!annovar.retrieveSeqFromFasta(refGeneFile, refFastaFilePath, outFastaFile))
-            {
-                throw -1;
-            }
-
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nRetrieve seq from fasta,\n");
-            QThread::msleep(10);
-
-            if (!runExTool(this->scriptpath+"annovar/retrieve_seq_from_fasta",
-                           annovar.getParamList()))
-            {
-                throw -1;
-            }
-
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nRetrieve seq from fasta OK.\n");
-            QThread::msleep(10);
             // annotation
             QString out = this->workDirectory->getOutputDirectory();
             QString name = this->workDirectory->getProjectName();
-            QString outFile = out + "/" + name + "_" + gffFileBaseName;
+            QString outFile = out + "/" + name;
             QString avinput = ui->avinFileLineEdit->text();
-            QString refGeneDir = gffFileAbPath;
-            QString refGenePrefix = gffFileBaseName;
-
-            // table_annovar
-            //        if (!annovar.tableAnnovar(avinput, refGeneDir, refGenePrefix, outFile))
-            //        {
-            //            throw -1;
-            //        }
-            //        this->process->start(this->scriptpath+"annovar/table_annovar", annovar.getParamList());
-
-            // annotate_variation
-            if (!annovar.annotateVariation(avinput, refGeneDir, refGenePrefix, outFile))
+            QString refGeneDir = refGeneFileAbPath;
+            QString refGenePrefix = refGeneFileBaseName;
+            if (refGeneFilePath.contains("_refGene.txt") &&
+                refSeqFilePath.contains("_refGeneMrna.fa"))
             {
-                throw -1;
+                QRegExp regExp("(.*)_refGene");
+                if (refGeneFileCompBaseName.indexOf(regExp) < 0)
+                {
+                    throw -1;
+                }
+                refGenePrefix = regExp.cap(1);
+
+                if (!annovar.annotateVariation(avinput, refGeneDir, refGenePrefix, outFile))
+                {
+                    throw -1;
+                }
+            }
+            else
+            {   // Make intermediate file *_refGene.txt and *_refGeneMrna.fa
+                if (refGeneFileSuffix.toLower()=="gff" || refGeneFileSuffix.toLower()=="gff3")
+                {
+                    if (!annovar.gffTogtf(refGeneFilePath, gtfFilePath))
+                    {
+                        throw -1;
+                    }
+                    emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
+                                                    "\nGff to gtf, \n");
+                    QThread::msleep(10);
+                    if (!runExTool(this->toolpath+"gffread", annovar.getParamList()))
+                    {
+                        throw -1;
+                    }
+                    emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
+                                                    "\nGff to gtf OK.\n");
+                    QThread::msleep(10);
+                }
+                else
+                {
+                    gtfFilePath = refGeneFilePath;
+                }
+
+                // gtfToGenePred
+                QString refGeneFile = refGeneFileAbPath+"/"+refGeneFileBaseName+"_refGene.txt";
+                if (!annovar.gtfToGenePred(gtfFilePath, refGeneFile))
+                {
+                    throw -1;
+                }
+                emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
+                                                "\nGtf to genePred, \n");
+                QThread::msleep(10);
+                if (!runExTool(this->toolpath+"gtfToGenePred", annovar.getParamList()))
+                {
+                    throw -1;
+                }
+                emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
+                                                "\nGtf to genePred OK.\n");
+                QThread::msleep(10);
+                // retrieve_seq_from_fasta
+                QString outFastaFile = refGeneFileAbPath + "/" + refGeneFileBaseName + "_refGeneMrna.fa";
+                if (!annovar.retrieveSeqFromFasta(refGeneFile, refSeqFilePath, outFastaFile))
+                {
+                    throw -1;
+                }
+
+                emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
+                                                "\nRetrieve seq from fasta,\n");
+                QThread::msleep(10);
+
+                if (!runExTool(this->scriptpath+"annovar/retrieve_seq_from_fasta",
+                               annovar.getParamList()))
+                {
+                    throw -1;
+                }
+
+                emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
+                                                "\nRetrieve seq from fasta OK.\n");
+                QThread::msleep(10);
+
+                if (!annovar.annotateVariation(avinput, refGeneDir, refGenePrefix, outFile))
+                {
+                    throw -1;
+                }
             }
 
             emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
@@ -3346,14 +2873,12 @@ void MainWindow::structuralAnnotation(QString avinputFilePath, QString gffFilePa
                 throw -1;
             }
 
-            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                            "\nStructural annotation OK.\n");
             QThread::msleep(10);
-            if (runningFlag && checkoutExistence(outFile+".variant_functino")
-                    && checkoutExistence(outFile+".exonic_variant_functino"))
+            if (runningFlag && checkoutExistence(outFile+".variant_function")
+                    && checkoutExistence(outFile+".exonic_variant_function"))
             {
-                varFuncFile = outFile+".variant_functino";
-                exonicVarFuncFile = outFile+".exonic_variant_functino";
+                emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
+                                                "\nStructural annotation OK.\n");
             }
         });
         while(!fu.isFinished())
@@ -3402,6 +2927,9 @@ void MainWindow::functionalAnnotation(QString snpPosFilePath, QString varFuncFil
         QString nonExonicPosFile = snpPosFileAbPath + "/non_exonic_pos";
         QString funcAnnoResult = out + "/" + name +"_func_anno";
         FuncAnnotator funcAnnotator;
+
+//        QRegExp ncbiFuncAnnoSuffixRegExp(".*.ncbi.csv");
+//        QRegExp ensemFuncAnnoSuffixRegExp(".*.ensem.csv");
 
         QFuture<void> fu = QtConcurrent::run(QThreadPool::globalInstance(), [&]()
         {   // Run functional annotation in another thread;
@@ -3456,27 +2984,52 @@ void MainWindow::on_annotationRunButton_clicked()
     this->runningFlag = true;
     ui->annotationRunButton->setEnabled(false);
 
+    try {
+        QString name = workDirectory->getProjectName();
+        QString out = workDirectory->getOutputDirectory();
+        QString avinputFilePath = ui->avinFileLineEdit->text();
+        QString refGeneFilePath = ui->refGeneFileLineEdit->text();
+        QString refSeqFilePath = ui->refSeqFileLineEdit->text();
 
-    QString name = workDirectory->getProjectName();
-    QString outFilePath = workDirectory->getOutputDirectory();
-    QString avinputFilePath = ui->avinFileLineEdit->text();
-    QString gffOrGtfFilePath = ui->gffFileLineEdit->text();
-    QString refGeneFasta = ui->fastaFileLineEdit->text();
+        if (avinputFilePath.isNull() || avinputFilePath.isEmpty())
+        {
+            emit setMsgBoxSig("Error", ".avinput file is necessary! ");
+            throw -1;
+        }
+        if (refGeneFilePath.isNull() || avinputFilePath.isEmpty())
+        {
+            emit setMsgBoxSig("Error", "Gff or Gtf file is necessary! ");
+            throw -1;
+        }
+        if (refSeqFilePath.isNull() || avinputFilePath.isEmpty())
+        {
+            emit setMsgBoxSig("Error", "Gene reference fasta file is necessary! ");
+            throw -1;
+        }
 
-    if (avinputFilePath.isNull() || avinputFilePath.isEmpty())
-    {
-        emit setMsgBoxSig("Error", ".avinput file is necessary! ");
-    }
-    if (gffOrGtfFilePath.isNull() || avinputFilePath.isEmpty())
-    {
-        emit setMsgBoxSig("Error", "Gff or Gtf file is necessary! ");
-    }
-    if (refGeneFasta.isNull() || avinputFilePath.isEmpty())
-    {
-        emit setMsgBoxSig("Error", "Gene reference fasta file is necessary! ");
+        structuralAnnotation(avinputFilePath, refGeneFilePath, refSeqFilePath);
+
+        QFileInfo fileInfo(refGeneFilePath);
+        QString baseName = fileInfo.baseName();
+        // Need same as output of structural annotation.
+        QString outFilePath = out + "/" + name + "_" + baseName;
+
+        QString snpPosFilePath = ui->snpPosFileLineEdit->text();
+        QString funcAnnoRefFilePath = ui->funcAnnoRefFileLineEdit->text();
+        QString varFuncFilePath = outFilePath+".variant_function";
+        QString exVarFuncFilePath = outFilePath+".exonic_variant_function";
+
+        if (checkoutExistence(snpPosFilePath) &&
+            checkoutExistence(funcAnnoRefFilePath) &&
+            checkoutExistence(varFuncFilePath) &&
+            checkoutExistence(exVarFuncFilePath))
+        {
+            functionalAnnotation(snpPosFilePath, varFuncFilePath, exVarFuncFilePath, funcAnnoRefFilePath);
+        }
+    } catch (...) {
+
     }
 
-    structuralAnnotation(avinputFilePath, gffOrGtfFilePath, refGeneFasta);
 
     ui->annotationRunButton->setEnabled(true);
     this->runningFlag = false;
@@ -3576,23 +3129,4 @@ void MainWindow::on_annoStepPushButton_clicked()
     qApp->processEvents();
     this->resetWindow();
     this->runningFlag = false;
-}
-
-void MainWindow::on_snpPosFileFileBrowButton_clicked()
-{
-    QFileDialog *fileDialog = new QFileDialog(this, "Open SNP position file", "",
-                                              "snpPos(all(*)");
-    fileDialog->setViewMode(QFileDialog::Detail);
-
-    QStringList fileNames;
-    if (fileDialog->exec())
-    {
-        fileNames = fileDialog->selectedFiles();
-    }
-    delete fileDialog;
-    if (fileNames.isEmpty())    // If didn't choose any file.
-    {
-        return;
-    }
-    ui->snpPosFileLineEdit->setText(fileNames[0]);
 }

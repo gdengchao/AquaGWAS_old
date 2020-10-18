@@ -100,10 +100,10 @@ private slots:
     // Graph viewer
     void graphViewer_clicked_slot();    // on_*** is implicit slot function
     // Structural annotation
-    void on_gffFileBrowButton_clicked();
+    void on_refGeneFileBrowButton_clicked();
 //    void on_structAnnoStepPushButton_clicked();
 //    void on_strucAnnoRunPushButton_clicked();
-    void on_fastaFileBrowButton_clicked();
+    void on_refSeqFileBrowButton_clicked();
     void on_avinFileBrowButton_clicked();   
     // Functional annotation
 //    void on_snpPosBrowButton_clicked();
@@ -113,6 +113,7 @@ private slots:
 //    void on_funcAnnoRunPushButton_clicked();
 //    void on_funcAnnoStepPushButton_clicked();
 
+    void on_snpPosFileFileBrowButton_clicked();
     void on_annoPvalBrowButton_clicked();
     void on_annotationRunButton_clicked();
     void on_annoStepPushButton_clicked();
@@ -135,7 +136,6 @@ private slots:
     // Set message box
     void on_setMsgBoxSig(const QString &title, const QString &text);
 
-    void on_snpPosFileFileBrowButton_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -189,7 +189,7 @@ private:
     // Checkout file existence.
     bool checkoutExistence(QString filePath);
     void addFilesExecutePermission(QString dir);
-    void structuralAnnotation(QString avinputFilePath, QString gffOrGtfFilePath, QString refFastaFilePath);
+    void structuralAnnotation(QString avinputFilePath, QString refGeneFilePath, QString refFastaFilePath);
     void functionalAnnotation(QString snpPosFilePath, QString varFuncFilePath,
                               QString exVarFuncFilePath, QString funcAnnoBase);
 };

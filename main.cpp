@@ -80,6 +80,41 @@ int main(int argc, char *argv[])
 //        stream << it << endl;
 //    }
 
+//    QFile funcAnno("/media/dengchao/data/data/Funcional_anno/Hdhv3_changeID_annotation");
+//    QFile funcBase("/media/dengchao/data/data/Funcional_anno/Hdhv3_changeID_annotation.funcanno");
+//    QFile funcEnsemCsv("/media/dengchao/data/data/Funcional_anno/Hdhv3_changeID_annotation.ensem.csv");
+//    QFile funcNcbiCsv("/media/dengchao/data/data/Funcional_anno/Hdhv3_changeID_annotation.ncbi.csv");
+
+//    funcAnno.open(QIODevice::ReadOnly);
+//    funcBase.open(QIODevice::WriteOnly);
+//    funcEnsemCsv.open(QIODevice::WriteOnly);
+//    funcNcbiCsv.open(QIODevice::WriteOnly);
+
+//    QTextStream funcAnnoStream(&funcAnno);
+//    QTextStream funcBaseStream(&funcBase);
+//    QTextStream funcCsvStream(&funcEnsemCsv);
+//    QTextStream funcNcbiStream(&funcNcbiCsv);
+
+//    funcAnnoStream.readLine();
+//    funcCsvStream << "Gene stable ID,Transcript stable ID,Protein stable ID,Gene name,Gene description" << endl;
+//    funcNcbiStream << "#Accession,Locus,Protein product,Protein Name" << endl;
+
+//    while (!funcAnnoStream.atEnd())
+//    {
+//        QStringList curLineList = funcAnnoStream.readLine().split("\t");
+//        curLineList[0] = curLineList[0].replace("T", "G");
+//        funcBaseStream << curLineList.join("\t") << endl;
+//        funcCsvStream << curLineList[0] << ",,,,Description_"+curLineList[0]  << endl;
+//        funcNcbiStream << ",\"" << curLineList[0] << "\""
+//                       << ",,\"Description_"+curLineList[0] << "\"" << endl;
+//    }
+
+//    FuncAnnotator funcAnnotator;
+//    funcAnnotator.complFuncAnnoInfo("/media/dengchao/data/data/Funcional_anno/exonic_pos",
+//                                    "/media/dengchao/data/data/Funcional_anno/non_exonic_pos",
+//                                    "/media/dengchao/data/data/Funcional_anno/Hdhv3_changeID_annotation.ncbi.csv",
+//                                    "/media/dengchao/data/data/Funcional_anno/func_anno_res");
+
     MainWindow w;
     w.show();
 

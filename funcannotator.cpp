@@ -442,29 +442,29 @@ bool FuncAnnotator::complFuncAnnoInfo(QString const exonicPosFilePath, QString n
     }
     QTextStream exonicPosFileStream(&exonicPosFile);
     QTextStream nonExonicPosFileStream(&nonExonicPosFile);
-    QMap<QString, QStringList> snpPosMap;       // Save both exonicPos and nonExonicPos.
+    QMap<QString, QStringList> geneIDMap;       // Save both exonicPos and nonExonicPos.
     while (!exonicPosFileStream.atEnd())
     {
-        QStringList curLine = exonicPosFileStream.readLine().split(QRegExp("\\s+"), QString::SkipEmptyParts);
-        if (curLine.length() == 6)
+        QStringList curLineList = exonicPosFileStream.readLine().split(QRegExp("\\s+"), QString::SkipEmptyParts);
+        if (curLineList.length() == 6)
         {
-            snpPosMap.insert(curLine[0], QStringList() << curLine << "unknown");
+            geneIDMap.insert(curLineList[0], QStringList() << curLineList << "unknown");
         }
         else
         {
-            snpPosMap.insert(curLine[0], curLine);
+            geneIDMap.insert(curLineList[0], curLineList);
         }
     }
     while (!nonExonicPosFileStream.atEnd())
     {
-        QStringList curLine = nonExonicPosFileStream.readLine().split(QRegExp("\\s+"), QString::SkipEmptyParts);
-        if (curLine.length() == 6)
+        QStringList curLineList = nonExonicPosFileStream.readLine().split(QRegExp("\\s+"), QString::SkipEmptyParts);
+        if (curLineList.length() == 6)
         {
-            snpPosMap.insert(curLine[0], QStringList() << curLine << "unknown");
+            geneIDMap.insert(curLineList[0], QStringList() << curLineList << "unknown");
         }
         else
         {
-            snpPosMap.insert(curLine[0], curLine);
+            geneIDMap.insert(curLineList[0], curLineList);
         }
     }
 
@@ -477,17 +477,66 @@ bool FuncAnnotator::complFuncAnnoInfo(QString const exonicPosFilePath, QString n
     }
     QTextStream baseFileStream(&baseFile);
     QTextStream outFileStream(&outFile);
-    while (!baseFileStream.atEnd())
+
+    if (baseFilePath.contains("ncbi.csv"))
     {
-        QStringList curLine = baseFileStream.readLine().split(QRegExp("\\s+"), QString::SkipEmptyParts);
-        QString id = curLine[0].replace('T', 'G');      // Specific data for abalone.
-//        QString id = curLine[0];
-        if (snpPosMap.find(id) == snpPosMap.end())
+        QStringList headerList = baseFileStream.readLine().remove(0, 1).split(',');      // Read the header line
+        int geneIDIndex = headerList.indexOf("Locus");
+        int geneDescripIndex = headerList.indexOf("Protein Name");
+        if (geneIDIndex < 0 || geneDescripIndex < 0)
         {
-            continue;
+            return false;
         }
-        curLine.removeFirst();
-        outFileStream << snpPosMap[id].join("\t") << "\t" << curLine.join("\t") << endl;
+        while (!baseFileStream.atEnd())
+        {
+            QString curLine = baseFileStream.readLine();
+            QStringList curLineList = curLine.replace("\"", "").split(",");
+            qDebug() << curLineList.join("\t");
+            if (geneIDMap.find(curLineList[geneIDIndex]) == geneIDMap.end())
+            {
+                continue;
+            }
+            outFileStream << geneIDMap[curLineList[geneIDIndex]].join("\t")
+                          << "\t" << curLineList[geneDescripIndex] << endl;
+        }
+    }
+    else if (baseFilePath.contains("ensem.csv"))
+    {
+        QStringList headerList = baseFileStream.readLine().split(',');      // Read the header line
+        int geneIDIndex = headerList.indexOf("Gene stable ID");
+        int geneDescripIndex = headerList.indexOf("Gene description");
+        if (geneIDIndex < 0 || geneDescripIndex < 0)
+        {
+            return false;
+        }
+
+        while (!baseFileStream.atEnd())
+        {
+            QStringList curLineList = baseFileStream.readLine().split(',');
+
+            if (geneIDMap.find(curLineList[geneIDIndex]) == geneIDMap.end())
+            {
+                continue;
+            }
+
+            outFileStream << geneIDMap[curLineList[geneIDIndex]].join("\t")
+                          << "\t" << curLineList[geneDescripIndex] << endl;
+        }
+    }
+    else    // The first column is Gene_id, the other column is description. seperate by '\t'
+    {
+        while (!baseFileStream.atEnd())
+        {
+            QStringList curLine = baseFileStream.readLine().split(QRegExp("\\s+"), QString::SkipEmptyParts);
+    //        QString id = curLine[0].replace('T', 'G');      // Transcript ID to Gene ID.
+            QString id = curLine[0];
+            if (geneIDMap.find(id) == geneIDMap.end())
+            {
+                continue;
+            }
+            curLine.removeFirst();
+            outFileStream << geneIDMap[id].join("\t") << "\t" << curLine.join("\t") << endl;
+        }
     }
 
     return true;
