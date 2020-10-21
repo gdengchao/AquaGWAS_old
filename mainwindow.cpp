@@ -2147,7 +2147,8 @@ void MainWindow::runPopLDdecaybyFamily(void)
                     throw -1;
                 }
 
-                QString ldResultFile = keepFileBaseName.split("_")[keepFileBaseName.split("_").length() - 1]+".stat.gz";
+                QString ldResultFile = out+"/"+name+"_"
+                        +keepFileBaseName.split("_")[keepFileBaseName.split("_").length()-1]+".stat.gz";
                 if (!ldPlot(QStringList()<<ldResultFile))
                 {
                     throw -1;
@@ -2294,6 +2295,7 @@ void MainWindow::runPopLDdecaySingle(void)
         }
         file.remove(plinkFile+".genotype");
 
+        // plot
         QString ldResultFile = out+"/"+name+".stat.gz";
         if (checkoutExistence(ldResultFile))
         {
@@ -2301,6 +2303,9 @@ void MainWindow::runPopLDdecaySingle(void)
             emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
                                             + "\nLD OK.\n");
             QThread::msleep(10);
+            emit runningMsgWidgetAppendText("LD plot, \n" + ldResultFile + "\n");
+            QThread::msleep(10);
+
             if (!ldPlot(QStringList() << ldResultFile))
             {
                 throw -1;
