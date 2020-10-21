@@ -92,36 +92,22 @@ private slots:
     void on_drawManPushButton_clicked();
     void on_drawQQPushButton_clicked();
     void on_qqmanGwasReultBrowButton_clicked();
-    void on_pcaRunPushButton_clicked();
     // Linkage disequilibrium
     void on_ldRunPushButton_clicked();
-    void on_ldPlotPushButton_clicked();
-    void on_ldReultBrowButton_clicked(); 
+//    void on_ldPlotPushButton_clicked();
     // Graph viewer
     void graphViewer_clicked_slot();    // on_*** is implicit slot function
-    // Structural annotation
+    // Structural annotation and Functional annotation
     void on_refGeneFileBrowButton_clicked();
-//    void on_structAnnoStepPushButton_clicked();
-//    void on_strucAnnoRunPushButton_clicked();
     void on_refSeqFileBrowButton_clicked();
     void on_avinFileBrowButton_clicked();   
-    // Functional annotation
-//    void on_snpPosBrowButton_clicked();
     void on_funcAnnoRefFileBrowButton_clicked();
-//    void on_varFuncFileBrowButton_clicked();
-//    void on_exVarFuncFileBrowButton_clicked();
-//    void on_funcAnnoRunPushButton_clicked();
-//    void on_funcAnnoStepPushButton_clicked();
-
     void on_snpPosFileFileBrowButton_clicked();
     void on_annoPvalBrowButton_clicked();
     void on_annotationRunButton_clicked();
     void on_annoStepPushButton_clicked();
-
     // PCA
-    void on_eigenvalFileBrowButton_clicked();
-    void on_eigenvecFileBrowButton_clicked();
-    void on_pcaPlotPushButton_clicked();
+    void on_pcaRunPushButton_clicked();
     // Quality control
     void on_qualCtrlDetailPushButton_clicked();
     // For my Process
@@ -182,15 +168,16 @@ private:
     QString refreshMessage(QString curMsg, QString newMsg);
     bool drawManhattan(QStringList data, QStringList out);
     bool drawQQplot(QStringList data, QStringList out);
+    QStringList ldPlot(QStringList ldResultFileList);
     QStringList makeQQManInputFile(QString pvalueFile);
     void runPopLDdecaySingle(void);
     void runPopLDdecaybyFamily(void);
     bool runExTool(QString tool, QStringList param);
     // Checkout file existence.
     bool checkoutExistence(QString filePath);
-    void addFilesExecutePermission(QString dir);
     void structuralAnnotation(QString avinputFilePath, QString refGeneFilePath, QString refFastaFilePath);
     void functionalAnnotation(QString snpPosFilePath, QString varFuncFilePath,
                               QString exVarFuncFilePath, QString funcAnnoBase);
+    void addFilesExecutePermission(QString dir);
 };
 #endif // MAINWINDOW_H

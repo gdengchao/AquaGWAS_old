@@ -1216,16 +1216,11 @@ void MainWindow::resetWindow()
 {
     ui->runGwasButton->setEnabled(true);
     ui->ldRunPushButton->setEnabled(true);
-    ui->ldPlotPushButton->setEnabled(true);
     ui->pcaRunPushButton->setEnabled(true);
-    ui->pcaPlotPushButton->setEnabled(true);
     ui->drawManPushButton->setEnabled(true);
     ui->drawQQPushButton->setEnabled(true);
     ui->annotationRunButton->setEnabled(true);
     ui->annoStepPushButton->setEnabled(true);
-//    ui->strucAnnoRunPushButton->setEnabled(true);
-//    ui->funcAnnoRunPushButton->setEnabled(true);
-//    ui->funcAnnoStepPushButton->setEnabled(true);
 }
 
 /**
@@ -1908,7 +1903,7 @@ void MainWindow::on_pcaRunPushButton_clicked()
             {
                 if (!runExTool(this->toolpath+"gcta64", gcta.getParamList()))
                 {
-                    return;
+                    throw -1;
                 }
             }
 
@@ -1918,7 +1913,7 @@ void MainWindow::on_pcaRunPushButton_clicked()
             {
                 if (!runExTool(this->toolpath+"gcta64", gcta.getParamList()))
                 {
-                    return;
+                    throw -1;
                 }
             }
 
@@ -1935,9 +1930,47 @@ void MainWindow::on_pcaRunPushButton_clicked()
             file.remove(binaryFile+".grm.N.bin");
 
             //            ui->eigenvalueLineEdit->setText(out+"/"+genoFileBaseName+".eigenval");
-            emit setLineEditTextSig(ui->eigenvalueLineEdit, out+"/"+genoFileBaseName+".eigenval");
+//            emit setLineEditTextSig(ui->eigenvalueLineEdit, out+"/"+genoFileBaseName+".eigenval");
             //            ui->eigenvectorLineEdit->setText(out+"/"+genoFileBaseName+".eigenvec");
-            emit setLineEditTextSig(ui->eigenvectorLineEdit, out+"/"+genoFileBaseName+".eigenvec");
+//            emit setLineEditTextSig(ui->eigenvectorLineEdit, out+"/"+genoFileBaseName+".eigenvec");
+
+            QString eigenvalFile = out+"/"+genoFileBaseName+".eigenval";
+            QString eigenvecFile = out+"/"+genoFileBaseName+".eigenvec";
+            QString outFile = this->workDirectory->getOutputDirectory() + "/" +
+                    this->workDirectory->getProjectName() + "_pca.png";
+
+            if (!checkoutExistence(eigenvalFile) ||
+                !checkoutExistence(eigenvecFile))
+            {
+                throw -1;
+            }
+
+            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
+                                            "\nPlot PCA, \n");
+            QThread::msleep(10);
+            QStringList param;
+            // The sequence of param is not changeable
+            param.clear();
+            param.append(this->scriptpath+"pca/pca_plot.R");    // Can choose pca_plot.R or pca_ggplot.R
+            param.append(eigenvalFile);
+            param.append(eigenvecFile);
+            param.append(outFile);
+
+            // R in environment path is necessary.
+            if (!runExTool("Rscript", param))
+            {
+                throw -1;
+            }
+            emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
+                                            "\nOK,\n" + outFile + "\n");
+            QThread::msleep(10);
+            // Show plot
+            if (this->runningFlag && checkoutExistence(outFile))
+            {
+                emit setGraphViewerGraphSig(QStringList() << outFile);
+                QThread::msleep(10);
+            }
+
         });
         while (!fu.isFinished())
         {
@@ -2004,7 +2037,6 @@ void MainWindow::runPopLDdecaybyFamily(void)
         QString genoFileAbPath = genoFileInfo.absolutePath();
         QStringList keepFileList;
 
-
         Plink plink;
         PopLDdecay popLDdecay;
         if (isVcfFile(genotype)){} // Transform "vcf" to "transpose"
@@ -2032,9 +2064,10 @@ void MainWindow::runPopLDdecaybyFamily(void)
                                         "\n.keep file OK.\n");
         QThread::msleep(10);
         bool isLD_OK = true;
+        QStringList graphList;
         for (QString keepFile:keepFileList)
         {
-            QFileInfo keepFileInfo(keepFile);
+            QFileInfo keepFileInfo(keepFile);   // WARNING
             QString keepFileBaseName = keepFileInfo.baseName();
             QString keepFileAbPath = keepFileInfo.absolutePath();
 
@@ -2114,10 +2147,6 @@ void MainWindow::runPopLDdecaybyFamily(void)
                     throw -1;
                 }
 
-                //                ui->ldResultLineEdit->setText(out+"/"+name+"_"+keepFileBaseName.split("_")[keepFileBaseName.split("_").length()-1]+".stat.gz");
-                emit setLineEditTextSig(ui->ldResultLineEdit,
-                                        out+"/"+name+"_"+keepFileBaseName.split("_").back()+".stat.gz");
-                QThread::msleep(10);
                 emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
                                                 "\nLD OK. (FID: " +
                                                 keepFileBaseName.split("_")[keepFileBaseName.split("_").length() - 1] + ")\n");
@@ -2133,10 +2162,15 @@ void MainWindow::runPopLDdecaybyFamily(void)
                 throw -1;
             }
             file.remove(genoFileAbPath+"/"+keepFileBaseName+".genotype");
+
+            QString ldResultFile = keepFileBaseName.split("_")[keepFileBaseName.split("_").length() - 1]+".stat.gz";
+
+            graphList.append(ldPlot(QStringList()<<ldResultFile));
         }
 
         if (isLD_OK)
         {
+            emit setGraphViewerGraphSig(ldPlot(graphList));
             emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
                                             "\nLD by family done. \n");
             QThread::msleep(10);
@@ -2251,14 +2285,13 @@ void MainWindow::runPopLDdecaySingle(void)
             {
                 return;
             };
+        }
+        file.remove(plinkFile+".genotype");
 
-            if (checkoutExistence(out+"/"+name+".stat.gz"))
-            {
-                //                ui->ldResultLineEdit->setText(out+"/"+name+".stat.gz");
-                emit setLineEditTextSig(ui->ldResultLineEdit, out+"/"+name+".stat.gz");
-                QThread::msleep(10);
-            }
-
+        QString ldResultFile = out+"/"+name+".stat.gz";
+        if (checkoutExistence(ldResultFile))
+        {
+            QThread::msleep(10);
             emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
                                             + "\nLD OK.\n");
             QThread::msleep(10);
@@ -2270,12 +2303,71 @@ void MainWindow::runPopLDdecaySingle(void)
             QThread::msleep(10);
             throw -1;
         }
-        file.remove(plinkFile+".genotype");
+
+        emit setGraphViewerGraphSig(ldPlot(QStringList() << ldResultFile));
+//        emit runningMsgWidgetAppendText("LD plot, \n" + ldResultFile + "\n");
+//        QThread::msleep(10);
+//        if (popLDdecay.plotLD(ldResultFile, out+"/"+name+"_ld"))
+//        {
+//            if (!runExTool(this->scriptpath+"poplddecay/Plot_OnePop",
+//                           popLDdecay.getParamList()))
+//            {
+//                return;
+//            };
+//            QStringList graphList(out+"/"+name+"_ld.png");
+//            if (this->runningFlag && checkoutExistence(graphList[0]))
+//            {
+//                emit runningMsgWidgetAppendText("LD plot OK.\n\n" + out+"/"+name+"_ld.png\n");
+//                emit setGraphViewerGraphSig(graphList);
+//                QThread::msleep(10);
+//            }
+//        }
     } catch (...) {
         ;
     }
 }
 
+QStringList MainWindow::ldPlot(QStringList ldResultFileList)
+{
+    QStringList plotFilePathList;
+//    QString out = this->workDirectory->getOutputDirectory();
+//    QString name = this->workDirectory->getProjectName();
+    PopLDdecay popLDdecay;
+
+    for (QString ldResultFile : ldResultFileList)
+    {
+        if (!checkoutExistence(ldResultFile))
+        {
+            return plotFilePathList;
+        }
+        emit runningMsgWidgetAppendText("LD plot, \n" + ldResultFile + "\n");
+        QThread::msleep(10);
+
+        QFileInfo ldResultFileInfo(ldResultFile);
+        QString abPath = ldResultFileInfo.absolutePath();
+        QString baseName = ldResultFileInfo.baseName();
+
+        if (popLDdecay.plotLD(ldResultFile, abPath+"/"+baseName+"_ld"))
+        {
+            if (!runExTool(this->scriptpath+"poplddecay/Plot_OnePop",
+                           popLDdecay.getParamList()))
+            {
+                return plotFilePathList;
+            };
+            QStringList graphList(abPath+"/"+baseName+"_ld.png");
+            if (this->runningFlag && checkoutExistence(graphList[0]))
+            {
+                emit runningMsgWidgetAppendText("LD plot OK.\n\n" + abPath+"/"+baseName+"_ld.png\n");
+                ldResultFileList.append(abPath+"/"+baseName+"_ld.png");
+//                emit setGraphViewerGraphSig(graphList);
+                QThread::msleep(10);
+            }
+        }
+    }
+
+    return ldResultFileList;
+}
+/*
 void MainWindow::on_ldPlotPushButton_clicked()
 {
     if (this->runningFlag)
@@ -2327,7 +2419,8 @@ void MainWindow::on_ldPlotPushButton_clicked()
     qApp->processEvents();
     this->runningFlag = false;
 }
-
+*/
+/*
 void MainWindow::on_ldReultBrowButton_clicked()
 {
     QFileDialog *fileDialog = new QFileDialog(this, "Open LD result file", this->workDirectory->getOutputDirectory(),
@@ -2346,7 +2439,7 @@ void MainWindow::on_ldReultBrowButton_clicked()
     }
     ui->ldResultLineEdit->setText(fileNames[0]);
 }
-
+*/
 void MainWindow::graphViewer_clicked_slot()
 {
     qDebug() << "Graph viewer clicked" << endl;
@@ -2508,106 +2601,6 @@ void MainWindow::on_annoPvalBrowButton_clicked()
     ui->annoPvalLineEdit->setText(fileNames[0]);
 }
 
-void MainWindow::on_eigenvalFileBrowButton_clicked()
-{
-    QFileDialog *fileDialog = new QFileDialog(this, "Open eigenval file", "",
-                                              "eigenval(*.eigenval);;all(*)");
-    fileDialog->setViewMode(QFileDialog::Detail);
-
-    QStringList fileNames;
-    if (fileDialog->exec())
-    {
-        fileNames = fileDialog->selectedFiles();
-    }
-    delete fileDialog;
-    if (fileNames.isEmpty())    // If didn't choose any file.
-    {
-        return;
-    }
-    ui->eigenvalueLineEdit->setText(fileNames[0]);
-}
-
-void MainWindow::on_eigenvecFileBrowButton_clicked()
-{
-    QFileDialog *fileDialog = new QFileDialog(this, "Open eigenvec file", "",
-                                              "eigenvec(*.eigenvec);;all(*)");
-    fileDialog->setViewMode(QFileDialog::Detail);
-
-    QStringList fileNames;
-    if (fileDialog->exec())
-    {
-        fileNames = fileDialog->selectedFiles();
-    }
-    delete fileDialog;
-    if (fileNames.isEmpty())    // If didn't choose any file.
-    {
-        return;
-    }
-    ui->eigenvectorLineEdit->setText(fileNames[0]);
-}
-
-void MainWindow::on_pcaPlotPushButton_clicked()
-{
-    if (this->runningFlag)
-    {
-        QMessageBox::information(nullptr, "Error", "A project is running now.");
-        return;
-    }
-    QString eigenvalFile = ui->eigenvalueLineEdit->text();
-    QString eigenvecFile = ui->eigenvectorLineEdit->text();
-    QString outFile = this->workDirectory->getOutputDirectory() + "/" +
-            this->workDirectory->getProjectName() + "_pca.png";
-
-    if (eigenvalFile.isEmpty() ||
-            eigenvecFile.isEmpty() ||
-            outFile.isEmpty())
-    {
-        this->resetWindow();
-        return;
-    }
-
-    this->runningFlag = true;
-    ui->pcaPlotPushButton->setEnabled(false);
-    qApp->processEvents();
-
-    QFuture<void> fu = QtConcurrent::run([&]()
-    {
-        emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                        "\nPlot PCA, \n");
-        QThread::msleep(10);
-        QStringList param;
-        // The sequence of param is not changeable
-        param.clear();
-        param.append(this->scriptpath+"pca/pca_plot.R");    // Can choose pca_plot.R or pca_ggplot.R
-        param.append(eigenvalFile);
-        param.append(eigenvecFile);
-        param.append(outFile);
-
-        // R in environment path is necessary.
-        if (!runExTool("Rscript", param))
-        {
-            return;
-        }
-        emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
-                                        "\nOK,\n" + outFile + "\n");
-        QThread::msleep(10);
-        // Show plot
-        if (this->runningFlag && checkoutExistence(outFile))
-        {
-            emit setGraphViewerGraphSig(QStringList() << outFile);
-            QThread::msleep(10);
-        }
-    });
-    while (!fu.isFinished())
-    {
-        qApp->processEvents(QEventLoop::AllEvents, 200);
-    }
-
-    ui->pcaPlotPushButton->setEnabled(true);
-    qApp->processEvents();
-    this->runningFlag = false;
-}
-
 /**
  * @brief AssocTool::pValCorrect
  * @param pvalFile  The last column is p-val.
@@ -2678,6 +2671,10 @@ bool MainWindow::runExTool(QString tool, QStringList param)
 
 bool MainWindow::checkoutExistence(QString filePath)
 {
+    if (filePath.isNull() || filePath.isEmpty())
+    {
+        return false;
+    }
     QFile file(filePath);
     return file.exists();
 }
