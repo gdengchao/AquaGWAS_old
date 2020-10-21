@@ -168,7 +168,7 @@ private:
     QString refreshMessage(QString curMsg, QString newMsg);
     bool drawManhattan(QStringList data, QStringList out);
     bool drawQQplot(QStringList data, QStringList out);
-    QStringList ldPlot(QStringList ldResultFileList);
+    bool ldPlot(QStringList ldResultFileList);
     QStringList makeQQManInputFile(QString pvalueFile);
     void runPopLDdecaySingle(void);
     void runPopLDdecaybyFamily(void);

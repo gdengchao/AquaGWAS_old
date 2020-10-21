@@ -26,7 +26,6 @@ public:
     bool transformCovariateFile(QString srcCovar, QString desCovar);
     bool makeAvinputAndSnpposFile(QString vcfFilePath, QString pvalFilePath,
                                   QString avinputFilePath, QString snpPosFilePath);
-
 private:
     QString phenotypeFile;
     QString genotypeFile;

@@ -196,3 +196,4 @@ bool FileReader::makeAvinputAndSnpposFile(QString vcfFilePath, QString pvalFileP
 
     return true;
 }
+

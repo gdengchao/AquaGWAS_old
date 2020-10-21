@@ -2147,6 +2147,12 @@ void MainWindow::runPopLDdecaybyFamily(void)
                     throw -1;
                 }
 
+                QString ldResultFile = keepFileBaseName.split("_")[keepFileBaseName.split("_").length() - 1]+".stat.gz";
+                if (!ldPlot(QStringList()<<ldResultFile))
+                {
+                    throw -1;
+                }
+
                 emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
                                                 "\nLD OK. (FID: " +
                                                 keepFileBaseName.split("_")[keepFileBaseName.split("_").length() - 1] + ")\n");
@@ -2163,14 +2169,15 @@ void MainWindow::runPopLDdecaybyFamily(void)
             }
             file.remove(genoFileAbPath+"/"+keepFileBaseName+".genotype");
 
-            QString ldResultFile = keepFileBaseName.split("_")[keepFileBaseName.split("_").length() - 1]+".stat.gz";
-
-            graphList.append(ldPlot(QStringList()<<ldResultFile));
+//            QFileInfo ldResultFileInfo(ldResultFile);
+//            QString abPath = ldResultFileInfo.absolutePath();
+//            QString baseName = ldResultFileInfo.baseName();
+//            graphList.append(abPath+"/"+baseName+"_ld.png");
         }
 
         if (isLD_OK)
         {
-            emit setGraphViewerGraphSig(ldPlot(graphList));
+//            emit setGraphViewerGraphSig(graphList);
             emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
                                             "\nLD by family done. \n");
             QThread::msleep(10);
@@ -2259,7 +2266,6 @@ void MainWindow::runPopLDdecaySingle(void)
         }
         else
         {
-
             emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
                                             + "\n" + plinkFile + ".genotype ERROR.\n");
             QThread::msleep(10);
@@ -2295,6 +2301,10 @@ void MainWindow::runPopLDdecaySingle(void)
             emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
                                             + "\nLD OK.\n");
             QThread::msleep(10);
+            if (!ldPlot(QStringList() << ldResultFile))
+            {
+                throw -1;
+            }
         }
         else
         {
@@ -2303,43 +2313,25 @@ void MainWindow::runPopLDdecaySingle(void)
             QThread::msleep(10);
             throw -1;
         }
-
-        emit setGraphViewerGraphSig(ldPlot(QStringList() << ldResultFile));
-//        emit runningMsgWidgetAppendText("LD plot, \n" + ldResultFile + "\n");
-//        QThread::msleep(10);
-//        if (popLDdecay.plotLD(ldResultFile, out+"/"+name+"_ld"))
-//        {
-//            if (!runExTool(this->scriptpath+"poplddecay/Plot_OnePop",
-//                           popLDdecay.getParamList()))
-//            {
-//                return;
-//            };
-//            QStringList graphList(out+"/"+name+"_ld.png");
-//            if (this->runningFlag && checkoutExistence(graphList[0]))
-//            {
-//                emit runningMsgWidgetAppendText("LD plot OK.\n\n" + out+"/"+name+"_ld.png\n");
-//                emit setGraphViewerGraphSig(graphList);
-//                QThread::msleep(10);
-//            }
-//        }
     } catch (...) {
         ;
     }
 }
 
-QStringList MainWindow::ldPlot(QStringList ldResultFileList)
+bool MainWindow::ldPlot(QStringList ldResultFileList)
 {
-    QStringList plotFilePathList;
-//    QString out = this->workDirectory->getOutputDirectory();
-//    QString name = this->workDirectory->getProjectName();
+    for (QString item:ldResultFileList)
+    {
+        if (!checkoutExistence(item))
+        {
+            return false;
+        }
+    }
+
     PopLDdecay popLDdecay;
 
     for (QString ldResultFile : ldResultFileList)
     {
-        if (!checkoutExistence(ldResultFile))
-        {
-            return plotFilePathList;
-        }
         emit runningMsgWidgetAppendText("LD plot, \n" + ldResultFile + "\n");
         QThread::msleep(10);
 
@@ -2352,94 +2344,21 @@ QStringList MainWindow::ldPlot(QStringList ldResultFileList)
             if (!runExTool(this->scriptpath+"poplddecay/Plot_OnePop",
                            popLDdecay.getParamList()))
             {
-                return plotFilePathList;
+                return false;
             };
             QStringList graphList(abPath+"/"+baseName+"_ld.png");
             if (this->runningFlag && checkoutExistence(graphList[0]))
             {
                 emit runningMsgWidgetAppendText("LD plot OK.\n\n" + abPath+"/"+baseName+"_ld.png\n");
-                ldResultFileList.append(abPath+"/"+baseName+"_ld.png");
-//                emit setGraphViewerGraphSig(graphList);
+                emit setGraphViewerGraphSig(QStringList() << abPath+"/"+baseName+"_ld.png");
                 QThread::msleep(10);
             }
         }
     }
 
-    return ldResultFileList;
+    return true;
 }
-/*
-void MainWindow::on_ldPlotPushButton_clicked()
-{
-    if (this->runningFlag)
-    {
-        QMessageBox::information(nullptr, "Error", "A project is running now.");
-        return;
-    }
-    QString ldResultFile = ui->ldResultLineEdit->text();
-    if (ldResultFile.isNull() || ldResultFile.isEmpty())
-    {
-        return;
-    }
-    this->runningFlag = true;
-    ui->ldPlotPushButton->setEnabled(false);
-    qApp->processEvents();
-    try {
-        QFuture<void> fu = QtConcurrent::run([&]()
-        {
-            QString out = this->workDirectory->getOutputDirectory();
-            QString name = this->workDirectory->getProjectName();
-            PopLDdecay popLDdecay;
-            emit runningMsgWidgetAppendText("LD plot, \n" + ldResultFile + "\n");
-            QThread::msleep(10);
-            if (popLDdecay.plotLD(ldResultFile, out+"/"+name+"_ld"))
-            {
-                if (!runExTool(this->scriptpath+"poplddecay/Plot_OnePop",
-                               popLDdecay.getParamList()))
-                {
-                    return;
-                };
-                QStringList graphList(out+"/"+name+"_ld.png");
-                if (this->runningFlag && checkoutExistence(graphList[0]))
-                {
-                    emit runningMsgWidgetAppendText("LD plot OK.\n\n" + out+"/"+name+"_ld.png\n");
-                    emit setGraphViewerGraphSig(graphList);
-                    QThread::msleep(10);
-                }
-            }
-        });
-        while (!fu.isFinished())
-        {
-            qApp->processEvents(QEventLoop::AllEvents, 200);
-        }
-    } catch (...) {
-        this->resetWindow();
-    }
 
-    ui->ldPlotPushButton->setEnabled(true);
-    qApp->processEvents();
-    this->runningFlag = false;
-}
-*/
-/*
-void MainWindow::on_ldReultBrowButton_clicked()
-{
-    QFileDialog *fileDialog = new QFileDialog(this, "Open LD result file", this->workDirectory->getOutputDirectory(),
-                                              "result(*.stat *stat.gz);;all(*)");
-    fileDialog->setViewMode(QFileDialog::Detail);
-
-    QStringList fileNames;
-    if (fileDialog->exec())
-    {
-        fileNames = fileDialog->selectedFiles();
-    }
-    delete fileDialog;
-    if (fileNames.isEmpty())    // If didn't choose any file.
-    {
-        return;
-    }
-    ui->ldResultLineEdit->setText(fileNames[0]);
-}
-*/
 void MainWindow::graphViewer_clicked_slot()
 {
     qDebug() << "Graph viewer clicked" << endl;
@@ -2719,6 +2638,10 @@ void MainWindow::on_setGraphViewerGraph(QStringList plot)
 {
     if (this->runningFlag)
     {
+        if (plot.isEmpty())
+        {
+            return;
+        }
         this->graphViewer->setGraph(plot);
         this->graphViewer->show();
     }
