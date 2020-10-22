@@ -2064,7 +2064,7 @@ void MainWindow::runPopLDdecaybyFamily(void)
                                         "\n.keep file OK.\n");
         QThread::msleep(10);
         bool isLD_OK = true;
-        QStringList graphList;
+        QStringList graphList;  // Save png path and set to graphViewer after plot.
         for (QString keepFile:keepFileList)
         {
             QFileInfo keepFileInfo(keepFile);   // WARNING
@@ -2153,7 +2153,8 @@ void MainWindow::runPopLDdecaybyFamily(void)
                 {
                     throw -1;
                 }
-
+                graphList.append(out+"/"+name+"_"
+                                 +keepFileBaseName.split("_")[keepFileBaseName.split("_").length()-1]+"_ld.png");
                 emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
                                                 "\nLD OK. (FID: " +
                                                 keepFileBaseName.split("_")[keepFileBaseName.split("_").length() - 1] + ")\n");
@@ -2169,16 +2170,11 @@ void MainWindow::runPopLDdecaybyFamily(void)
                 throw -1;
             }
             file.remove(genoFileAbPath+"/"+keepFileBaseName+".genotype");
-
-//            QFileInfo ldResultFileInfo(ldResultFile);
-//            QString abPath = ldResultFileInfo.absolutePath();
-//            QString baseName = ldResultFileInfo.baseName();
-//            graphList.append(abPath+"/"+baseName+"_ld.png");
         }
 
         if (isLD_OK)
         {
-//            emit setGraphViewerGraphSig(graphList);
+            emit setGraphViewerGraphSig(graphList);
             emit runningMsgWidgetAppendText(QDateTime::currentDateTime().toString() +
                                             "\nLD by family done. \n");
             QThread::msleep(10);
