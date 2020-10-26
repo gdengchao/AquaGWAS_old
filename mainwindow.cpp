@@ -2673,9 +2673,11 @@ void MainWindow::addFilesExecutePermission(QString directory)
     }
 }
 
-void MainWindow::structuralAnnotation(QString avinputFilePath, QString refGeneFilePath, QString refSeqFilePath)
+void MainWindow::structuralAnnotation(QString avinputFilePath, QString refGeneFilePath,
+                                      QString refSeqFilePath, QString outFile)
 {
-    if (avinputFilePath.isNull() || refGeneFilePath.isNull() || refSeqFilePath.isNull())
+    if (avinputFilePath.isNull() || refGeneFilePath.isNull()
+            || refSeqFilePath.isNull() || outFile.isNull())
     {
         return;
     }
@@ -2698,7 +2700,7 @@ void MainWindow::structuralAnnotation(QString avinputFilePath, QString refGeneFi
             // annotation
             QString out = this->workDirectory->getOutputDirectory();
             QString name = this->workDirectory->getProjectName();
-            QString outFile = out + "/" + name;
+//            QString outFile = out + "/" + name;
             QString avinput = ui->avinFileLineEdit->text();
             QString refGeneDir = refGeneFileAbPath;
             QString refGenePrefix = refGeneFileBaseName;
@@ -2928,12 +2930,13 @@ void MainWindow::on_annotationRunButton_clicked()
             throw -1;
         }
 
-        structuralAnnotation(avinputFilePath, refGeneFilePath, refSeqFilePath);
 
         QFileInfo fileInfo(refGeneFilePath);
         QString baseName = fileInfo.baseName();
-        // Need same as output of structural annotation.
         QString outFilePath = out + "/" + name + "_" + baseName;
+
+        structuralAnnotation(avinputFilePath, refGeneFilePath, refSeqFilePath, outFilePath);
+        // Need same as output of structural annotation.
 
         QString snpPosFilePath = ui->snpPosFileLineEdit->text();
         QString funcAnnoRefFilePath = ui->funcAnnoRefFileLineEdit->text();

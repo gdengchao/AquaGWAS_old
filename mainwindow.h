@@ -175,7 +175,8 @@ private:
     bool runExTool(QString tool, QStringList param);
     // Checkout file existence.
     bool checkoutExistence(QString filePath);
-    void structuralAnnotation(QString avinputFilePath, QString refGeneFilePath, QString refFastaFilePath);
+    void structuralAnnotation(QString avinputFilePath, QString refGeneFilePath,
+                              QString refFastaFilePath, QString outFilePath);
     void functionalAnnotation(QString snpPosFilePath, QString varFuncFilePath,
                               QString exVarFuncFilePath, QString funcAnnoBase);
     void addFilesExecutePermission(QString dir);
