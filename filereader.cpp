@@ -185,10 +185,16 @@ bool FileReader::makeAvinputAndSnpposFile(QString vcfFilePath, QString pvalFileP
             continue;
         }
         QStringList curLineList = curLine.split(QRegExp("\\s+"), QString::SkipEmptyParts);
-        if (snpIDMap.find(curLineList[2]) != snpIDMap.end())
+
+        QString snpID = curLineList[2];
+        if (snpID == '.')
         {
-            snpPosFileStream << snpIDMap[curLineList[2]] << "\tchr" << curLineList[0] << "\t" << curLineList[1] << endl;
-            avinputFileStream << "chr"+curLineList[0] << "\t"
+            snpID = (isNumber(curLineList[0]) ? "chr"+curLineList[0] : curLineList[0]) +":"+curLineList[1];
+        }
+        if (snpIDMap.find(snpID) != snpIDMap.end())
+        {
+            snpPosFileStream << snpIDMap[snpID] << "\tchr" << curLineList[0] << "\t" << curLineList[1] << endl;
+            avinputFileStream << (isNumber(curLineList[0]) ? "chr"+curLineList[0] : curLineList[0]) << "\t"
                               << curLineList[1] << "\t" << curLineList[1] << "\t"
                               << curLineList[3] << "\t" << curLineList[4] << endl;
         }
@@ -197,3 +203,14 @@ bool FileReader::makeAvinputAndSnpposFile(QString vcfFilePath, QString pvalFileP
     return true;
 }
 
+bool FileReader::isNumber(QString str)
+{
+    for (auto i:str)
+    {
+        if (i<'0' || i > '9')
+        {
+            return false;
+        }
+    }
+    return true;
+}
