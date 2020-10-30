@@ -1,12 +1,3 @@
-## branch dev 
->daily programming
-
-### Notice:
->some path of tools/scripts are necessary to pay attention to:
->1. toolpath and scriptpath
->2. plot.R(manhattan.R and qq.R)
->3. table_annovar.pl(annotate_variation.pl, coding_change.pl and convert2annovar.pl)
-
 ## AquaGWAS
 ### Usage for GUI
 **There are five modules in AquaGWAS:** 
@@ -42,12 +33,19 @@ When the input phenotype data file contains multiple phenotype data, you can sel
 >![MAN/QQ](https://note.youdao.com/favicon.ico)
 + **PCA/LD (Principal component analysis and linkage disequilibrium)** 
 > Both PCA and LD need to the genotype file, you can open genotype in the left side of interface.  
-> **For PCA**, you can set the number of PCs and how many threads will run by GCTA.   
+> **For PCA**, you can set the number of PCs and how many threads will run by GCTA.(Need R to get a plot,  installation method refer to #4)  
 > ![PCA](https://note.youdao.com/favicon.ico)   
 **For LD**, you can choose whether to select "By family" or not. When you select "By family", LD will be analyzed per family according to FID, and each family will get a result respectively.   
 ![LD](https://note.youdao.com/favicon.ico)
 + **ANNOTATION (Structural annotation and functional annotation)**
-> The module annotation contains structural annotation and fucntional annotation. The input files for  structual anntation are avinput, reference gene and reference sequence. The avinupt is a input file for annovar, the format of avinput:  
+> 1. annotaion  
+The module annotation contains structural annotation and fucntional annotation. The input files for  structual anntation are avinput, reference gene and reference sequence. The avinupt is a input file for annovar, the format of avinput:  
 ![AVINPUT](https://note.youdao.com/favicon.ico)  
 The reference gene could be a gtf file or gff file, and reference sequence should be a .fasta file. In addition, you can offer a refGene.txt as reference gene and a refMrna.fa as reference sequence.   
-The input files for functional anntation are snp position and functional annotation reference database. The data of snp position file should be "snp_ID p-val CHR BP" without header. The functional annotation reference database file can be three formats: 1. The first column is "Gene_ID" and the others(can be multiple columns) are description, the suggested file suffix is "funcanno". 2. A database download from NCBI(with suffix "*ncbi.csv"). 3. A database download from ensemble. (We offered "*_refGene.txt", "*refGeneMrna.fa" and funcation annotation databse file of some species)
+The input files for functional anntation are snp position and functional annotation reference database. The data of snp position file should be "snp_ID p-val CHR BP" without header. The functional annotation reference database file can be three formats: 1. The first column is "Gene_ID" and the others(can be multiple columns) are description, the suggested file suffix is "funcanno". 2. A database download from NCBI(with suffix "*ncbi.csv"). 3. A database download from ensemble. 
+(We offered "*_refGene.txt", "*refGeneMrna.fa" and funcation annotation databse file of some species)  
+**Notice:** 1. When no input of functional annotation, the functional annotaion won't be executed.  
+![ANNOTATION](https://note.youdao.com/favicon.ico)  
+> 2. step  
+the "avinput" and "snp_pos" file can be generated from a ".vcf"(open in Genotype) and a p-value file of association analysis(open automatically after association analysis). The threshold is used for filtering SNP and getting significant SNP.  
+![STEP](https://note.youdao.com/favicon.ico)
