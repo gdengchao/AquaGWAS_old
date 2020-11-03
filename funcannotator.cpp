@@ -282,11 +282,11 @@ bool FuncAnnotator::complNonExoSnpInfo(QString const exonicPosFilePath, QString 
         return false;
     }
     QTextStream exonicPosFileStream(&exonicPosFile);
-    QSet<QString> exonicSnpIDSet;
+    QSet<QString> exonicSnpSet;       // Use "chr_bp" represent SNP.
     while (!exonicPosFileStream.atEnd())
     {
         QStringList curLine = exonicPosFileStream.readLine().split(QRegExp("\\s+"), QString::SkipEmptyParts);
-        exonicSnpIDSet.insert(curLine[2]);
+        exonicSnpSet.insert(curLine[2]+"_"+curLine[3]);
     }
 
     ///////////////////////////////////////
@@ -302,8 +302,8 @@ bool FuncAnnotator::complNonExoSnpInfo(QString const exonicPosFilePath, QString 
     while(!snpPosFileStream.atEnd())
     {
         QStringList curLine = snpPosFileStream.readLine().split(QRegExp("\\s+"), QString::SkipEmptyParts);
-        if (exonicSnpIDSet.find(curLine[0]) != exonicSnpIDSet.end())
-        {   // Exclude snp in exonic.
+        if (exonicSnpSet.find(curLine[2]+"_"+curLine[3]) != exonicSnpSet.end())
+        {   // Exclude snp in exonic. Use "chr_bp"
             continue;
         }
         QString chr_bp = curLine[2]+"_"+curLine[3];

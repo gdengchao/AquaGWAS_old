@@ -109,14 +109,23 @@ int main(int argc, char *argv[])
 //                       << ",,\"Description_"+curLineList[0] << "\"" << endl;
 //    }
 
-//    FuncAnnotator funcAnnotator;
+    FuncAnnotator funcAnnotator;
+//    funcAnnotator.complExoSnpInfo("/media/dengchao/data/data/function_annotation/tmp_pos",
+//                                  "/media/dengchao/data/data/function_annotation/snp_anno.exonic_variant_function",
+//                                  "/media/dengchao/data/data/function_annotation/exonic_pos");
+    funcAnnotator.complNonExoSnpInfo("/media/dengchao/data/data/function_annotation/exonic_pos_cpy",
+                                     "/media/dengchao/data/data/function_annotation/tmp_pos",
+                                     "/media/dengchao/data/data/function_annotation/snp_anno.variant_function",
+                                     "/media/dengchao/data/data/function_annotation/non_exonic_pos");
 //    funcAnnotator.complFuncAnnoInfo("/media/dengchao/data/data/Funcional_anno/exonic_pos",
 //                                    "/media/dengchao/data/data/Funcional_anno/non_exonic_pos",
 //                                    "/media/dengchao/data/data/Funcional_anno/Hdhv3_changeID_annotation.ncbi.csv",
 //                                    "/media/dengchao/data/data/Funcional_anno/func_anno_res");
 
-    MainWindow w;
-    w.show();
+    qDebug() << "OVER" << endl;
 
-    return a.exec();
+//    MainWindow w;
+//    w.show();
+
+//    return a.exec();
 }
