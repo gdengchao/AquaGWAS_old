@@ -302,11 +302,11 @@ bool FuncAnnotator::complNonExoSnpInfo(QString const exonicPosFilePath, QString 
     while(!snpPosFileStream.atEnd())
     {
         QStringList curLine = snpPosFileStream.readLine().split(QRegExp("\\s+"), QString::SkipEmptyParts);
-        if (exonicSnpSet.find(curLine[2]+"_"+curLine[3]) != exonicSnpSet.end())
+        QString chr_bp = curLine[2]+"_"+curLine[3];
+        if (exonicSnpSet.find(chr_bp) != exonicSnpSet.end())
         {   // Exclude snp in exonic. Use "chr_bp"
             continue;
         }
-        QString chr_bp = curLine[2]+"_"+curLine[3];
         snpPosInfoMap.insert(chr_bp, curLine);
     }
 
@@ -325,10 +325,10 @@ bool FuncAnnotator::complNonExoSnpInfo(QString const exonicPosFilePath, QString 
     while(!varFuncFileStream.atEnd())
     {
         QStringList curLine = varFuncFileStream.readLine().split(QRegExp("\\s+"), QString::SkipEmptyParts);
-        if (curLine[0] == "intergenic")
-        {   // Not to deal with.
-            continue;
-        }
+//        if (curLine[0] == "intergenic")
+//        {   // Not to deal with.
+//            continue;
+//        }
         QString chr_bp = curLine[2]+"_"+curLine[3];
         if (snpPosInfoMap.find(chr_bp) == snpPosInfoMap.end())
         {   // Not to deal with.
@@ -385,15 +385,17 @@ bool FuncAnnotator::complNonExoSnpInfo(QString const exonicPosFilePath, QString 
         }
         else if (commaCounter == 1)
         {   // curLine[0]:intergenic    curLine[1]:HDH_G00724(dist=1008),HDH_G00725(dist=39868)
+            // also can be: upstream	HDH_G00718,HDH_G00719(dist=775)	Contig678	47982	47982	G	C
             QStringList geneAnno = curLine[1].split(",", QString::SkipEmptyParts);
             QStringList gene_1st = geneAnno[0].split(QRegExp("\\(|\\)"), QString::SkipEmptyParts);
             outFileStream << snpPosInfoMap[chr_bp].join("\t") << "\t"
                           << gene_1st[0] << "\t" << curLine[0] << "\t"
-                          << (geneAnno.length() < 2 ? "" : geneAnno[1]) << endl;
+                          << (gene_1st.length() < 2 ? "" : gene_1st[1]) << endl;
             QStringList gene_2nd = geneAnno[1].split(QRegExp("\\(|\\)"), QString::SkipEmptyParts);
             outFileStream << snpPosInfoMap[chr_bp].join("\t") << "\t"
                           << gene_2nd[0] << "\t" << curLine[0] << "\t"
-                          << (geneAnno.length() < 2 ? "" : geneAnno[1]) << endl;
+                          // consider upstream or downstream without dist ---> judge geneAnno.length()
+                          << (gene_2nd.length() < 2 ? "" : gene_2nd[1]) << endl;
         }
         else if (semiCounter == 1)
         {   // curLine[0]:upstream;downstream     curLine[1]:HDH_G00745(dist=401);HDH_G00744(dist=386)
@@ -407,6 +409,10 @@ bool FuncAnnotator::complNonExoSnpInfo(QString const exonicPosFilePath, QString 
             outFileStream << snpPosInfoMap[chr_bp].join("\t") << "\t"
                           << geneAnno[0] << "\t" << snpRegion[1] << "\t"
                           << (geneAnno.length() < 2 ? "" : geneAnno[1]) << endl;
+        }
+        else
+        {
+
         }
     }
 
