@@ -117,13 +117,13 @@ int main(int argc, char *argv[])
 //                                     "/media/dengchao/data/data/function_annotation/tmp_pos",
 //                                     "/media/dengchao/data/data/function_annotation/snp_anno.variant_function",
 //                                     "/media/dengchao/data/data/function_annotation/non_exonic_pos");
-    funcAnnotator.complFuncAnnoInfo("/media/dengchao/data/data/function_annotation/exonic_pos",
-                                    "/media/dengchao/data/data/function_annotation/non_exonic_pos",
-                                    "/media/dengchao/data/data/Funcional_anno/Hdhv3_changeID_annotation.ncbi.csv",
-                                    "/media/dengchao/data/data/Funcional_anno/func_anno_res");
+//    funcAnnotator.complFuncAnnoInfo("/media/dengchao/data/data/function_annotation/exonic_pos",
+//                                    "/media/dengchao/data/data/function_annotation/non_exonic_pos",
+//                                    "/media/dengchao/data/data/Funcional_anno/Hdhv3_changeID_annotation.ncbi.csv",
+//                                    "/media/dengchao/data/data/Funcional_anno/func_anno_res");
 
-//    MainWindow w;
-//    w.show();
+    MainWindow w;
+    w.show();
 
-//    return a.exec();
+    return a.exec();
 }

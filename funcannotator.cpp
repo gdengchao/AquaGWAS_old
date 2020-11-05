@@ -439,6 +439,60 @@ bool FuncAnnotator::complFuncAnnoInfo(QString const exonicPosFilePath, QString n
         return false;
     }
 
+    QMap<QString, QString> geneIDMap;       // Save both exonicPos and nonExonicPos.
+    QFile baseFile(baseFilePath);
+    QFile outFile(outFilePath);
+    if  (!baseFile.open(QIODevice::ReadOnly) ||
+         !outFile.open(QIODevice::WriteOnly))
+    {
+        return false;
+    }
+    QTextStream baseFileStream(&baseFile);
+
+    if (baseFilePath.contains("ncbi.csv"))
+    {
+        QStringList headerList = baseFileStream.readLine().remove(0, 1).split(',');      // Read the header line
+        int geneIDIndex = headerList.indexOf("Locus");
+        int geneDescripIndex = headerList.indexOf("Protein Name");
+        if (geneIDIndex < 0 || geneDescripIndex < 0)
+        {
+            return false;
+        }
+        while (!baseFileStream.atEnd())
+        {
+            QString curLine = baseFileStream.readLine();
+            QStringList curLineList = curLine.replace("\"", "").split(",");
+            geneIDMap.insert(curLineList[geneIDIndex], curLineList[geneDescripIndex]);
+        }
+    }
+    else if (baseFilePath.contains("ensem.csv"))
+    {
+        QStringList headerList = baseFileStream.readLine().split(',');      // Read the header line
+        int geneIDIndex = headerList.indexOf("Gene stable ID");
+        int geneDescripIndex = headerList.indexOf("Gene description");
+        if (geneIDIndex < 0 || geneDescripIndex < 0)
+        {
+            return false;
+        }
+
+        while (!baseFileStream.atEnd())
+        {
+            QStringList curLineList = baseFileStream.readLine().split(',');
+            geneIDMap.insert(curLineList[geneIDIndex], curLineList[geneDescripIndex]);
+        }
+    }
+    else    // The first column is Gene_id, the other column is description. seperate by '\t'
+    {
+        while (!baseFileStream.atEnd())
+        {
+            QStringList curLine = baseFileStream.readLine().split(QRegExp("\\s+"), QString::SkipEmptyParts);
+            //        QString id = curLine[0].replace('T', 'G');      // Transcript ID to Gene ID.
+            QString id = curLine[0];
+            curLine.removeFirst();
+            geneIDMap.insert(id, curLine.join("\t"));
+        }
+    }
+
     QFile exonicPosFile(exonicPosFilePath);
     QFile nonExonicPosFile(nonExonicPosFilePath);
     if (!nonExonicPosFile.open(QIODevice::ReadOnly) ||
@@ -448,6 +502,66 @@ bool FuncAnnotator::complFuncAnnoInfo(QString const exonicPosFilePath, QString n
     }
     QTextStream exonicPosFileStream(&exonicPosFile);
     QTextStream nonExonicPosFileStream(&nonExonicPosFile);
+    QTextStream outFileStream(&outFile);
+
+    while (!exonicPosFileStream.atEnd())
+    {
+        QStringList curLineList = exonicPosFileStream.readLine().split(QRegExp("\\s+"), QString::SkipEmptyParts);
+        if (curLineList.length() == 6)
+        {
+            outFileStream << curLineList.join("\t") << "\t" << "unknown\t"
+                          << geneIDMap[curLineList[4]] << endl;
+//            geneIDMap.insert(curLineList[4], QStringList() << curLineList << "unknown");
+        }
+        else
+        {
+            outFileStream << curLineList.join("\t") << "\t"
+                          << geneIDMap[curLineList[4]] << endl;
+//            geneIDMap.insert(curLineList[4], curLineList);
+        }
+    }
+    while (!nonExonicPosFileStream.atEnd())
+    {
+        QStringList curLineList = nonExonicPosFileStream.readLine().split(QRegExp("\\s+"), QString::SkipEmptyParts);
+        if (curLineList.length() == 6)
+        {
+            outFileStream << curLineList.join("\t") << "\t" << "unknown\t"
+                          << geneIDMap[curLineList[4]] << endl;
+//            geneIDMap.insert(curLineList[4], QStringList() << curLineList << "unknown");
+        }
+        else
+        {
+            outFileStream << curLineList.join("\t") << "\t"
+                          << geneIDMap[curLineList[4]] << endl;
+//            geneIDMap.insert(curLineList[4], curLineList);
+        }
+    }
+
+    return true;
+}
+
+/*
+bool FuncAnnotator::complFuncAnnoInfo(QString const exonicPosFilePath, QString nonExonicPosFilePath,
+                                      QString baseFilePath, QString outFilePath)
+{
+    if (exonicPosFilePath.isNull() ||
+        nonExonicPosFilePath.isNull() ||
+        baseFilePath.isNull() ||
+        outFilePath.isNull())
+    {
+        return false;
+    }
+
+    QFile exonicPosFile(exonicPosFilePath);
+    QFile nonExonicPosFile(nonExonicPosFilePath);
+    if (!nonExonicPosFile.open(QIODevice::ReadOnly) ||
+        !exonicPosFile.open(QIODevice::ReadOnly))
+    {
+        return false;
+    }
+    QTextStream exonicPosFileStream(&exonicPosFile);
+    QTextStream nonExonicPosFileStream(&nonExonicPosFile);
+    // Can't use map here, because of duplication.
     QMap<QString, QStringList> geneIDMap;       // Save both exonicPos and nonExonicPos.
     while (!exonicPosFileStream.atEnd())
     {
@@ -547,6 +661,7 @@ bool FuncAnnotator::complFuncAnnoInfo(QString const exonicPosFilePath, QString n
 
     return true;
 }
+*/
 
 /**
  * @brief FuncAnnotator::makeBaseFromGtfAndNcbi

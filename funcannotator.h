@@ -10,6 +10,7 @@
 #include <QProcess>
 #include <QApplication>
 #include <QMap>
+#include <QPair>
 #include <QSet>
 #include <iostream>
 
