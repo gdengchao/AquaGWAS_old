@@ -193,7 +193,9 @@ bool FileReader::makeAvinputAndSnpposFile(QString vcfFilePath, QString pvalFileP
         }
         if (snpIDMap.find(snpID) != snpIDMap.end())
         {
-            snpPosFileStream << snpIDMap[snpID] << "\tchr" << curLineList[0] << "\t" << curLineList[1] << endl;
+            snpPosFileStream << snpIDMap[snpID] << "\t"
+                             << (isNumber(curLineList[0]) ? "chr"+curLineList[0] : curLineList[0])
+                             << "\t" << curLineList[1] << endl;
             avinputFileStream << (isNumber(curLineList[0]) ? "chr"+curLineList[0] : curLineList[0]) << "\t"
                               << curLineList[1] << "\t" << curLineList[1] << "\t"
                               << curLineList[3] << "\t" << curLineList[4] << endl;

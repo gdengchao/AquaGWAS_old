@@ -221,6 +221,7 @@ bool Annovar::vcf2avinput(QString vcf, QStringList snpIDList, QString avinput)
         return false;
     }
 
+    FileReader fileReader;
     // traverse map file, extract SNP.
     QTextStream vcfFileStream(&vcfFile);
     QTextStream avinputFileStream(&avinputFile);
@@ -235,9 +236,9 @@ bool Annovar::vcf2avinput(QString vcf, QStringList snpIDList, QString avinput)
         QStringList curLineList = curLine.split(QRegExp("\\s+"), QString::SkipEmptyParts);
         if (snpIDList.indexOf(curLineList[2]) != -1)
         {
-            avinputFileStream << "chr"+curLineList[0] << "\t"
-                              << curLineList[1] << "\t" << curLineList[1] << "\t"
-                              << curLineList[3] << "\t" << curLineList[4] << endl;
+            avinputFileStream << (fileReader.isNumber(curLineList[0]) ? "chr"+curLineList[0] : curLineList[0])
+                    << "\t" << curLineList[1] << "\t" << curLineList[1]
+                    << "\t" << curLineList[3] << "\t" << curLineList[4] << endl;
         }
     }
 

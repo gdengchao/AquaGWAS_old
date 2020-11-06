@@ -31,6 +31,13 @@ GemmaParamWidget::GemmaParamWidget(QWidget *parent) :
     bslmmModelBtnGroup->addButton(ui->ridgeBslmmRadioButton);
     bslmmModelBtnGroup->addButton(ui->probitBslmmRadioButton);
     bslmmModelBtnGroup->setExclusive(true);
+    // Hide the function of BSLMM   ------------ begin
+    ui->stdLinearBslmmRadioButton->hide();      // Hide button
+    ui->ridgeBslmmRadioButton->hide();
+    ui->probitBslmmRadioButton->hide();
+    ui->bslmmModelLabel->hide();                // Hide label
+    ui->bslmmLine->hide();                      // Hide line
+    // Hide the function of BSLMM   ------------ end
     famCompleteBtnGroup->addButton(ui->yesFamRadioButton);
     famCompleteBtnGroup->addButton(ui->noFamRadioButton);
     famCompleteBtnGroup->setExclusive(true);
