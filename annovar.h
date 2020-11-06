@@ -5,6 +5,7 @@
 #include <QFileInfo>
 #include <QTextStream>
 #include "tool.h"
+#include "filereader.h"
 
 class Annovar : public Tool
 {

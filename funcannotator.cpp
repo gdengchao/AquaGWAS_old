@@ -124,7 +124,7 @@ bool FuncAnnotator::extractPos(QString const pvalFilePath, QString const mapFile
     {
         return false;
     }
-
+    FileReader fileReader;
     // traverse map file, extract SNP.
     QTextStream mapFileStream(&mapFile);
     QTextStream outFileStream(&outFile);
@@ -133,7 +133,9 @@ bool FuncAnnotator::extractPos(QString const pvalFilePath, QString const mapFile
         QStringList curLine = mapFileStream.readLine().split(QRegExp("\\s+"), QString::SkipEmptyParts);
         if (snpIDMap.find(curLine[1]) != snpIDMap.end())
         {
-            outFileStream << snpIDMap[curLine[1]] << "\tchr" << curLine[0] << "\t" << curLine[3] << endl;
+            outFileStream << snpIDMap[curLine[1]] << "\t"
+                          << (fileReader.isNumber(curLine[0]) ? "chr"+curLine[0] : curLine[0])
+                          << "\t" << curLine[3] << endl;
         }
     }
 

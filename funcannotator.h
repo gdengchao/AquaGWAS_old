@@ -13,6 +13,7 @@
 #include <QPair>
 #include <QSet>
 #include <iostream>
+#include "filereader.h"
 
 // Functional annotator
 class FuncAnnotator
